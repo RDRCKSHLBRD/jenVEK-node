@@ -171,6 +171,8 @@ export function generateSVG() {
                  case 'trig': result = generateTrigPattern(layerGroup, layerOptions, palette); break;
                  case 'bezier': result = generateBezierPattern(layerGroup, layerOptions, palette); break;
                  case 'lissajous': result = generateLissajousPattern(layerGroup, layerOptions, palette); break;
+                 case 'padovan': result = generatePadovanPattern(layerGroup, layerOptions, palette); break;
+                 case 'recaman': result = generateRecamanPattern(layerGroup, layerOptions, palette); break;
                  default:
                      // Fallback for unknown pattern types
                      console.warn("Unknown pattern type selected:", options.patternType, "Falling back to random.");
@@ -1089,6 +1091,204 @@ function generateLissajousPattern(parent, options, palette) {
      return { elementCount, curves: numCurves, stepsPerCurve: steps };
 }
 
+
+
+/**
+ * Generates an SVG pattern based on the Padovan sequence.
+ */
+
+ function generatePadovanPattern(parent, options, palette) {
+    console.log("Generating Padovan pattern...");
+    const { viewportWidth: width, viewportHeight: height, complexity, density, scale, strokeWeight, opacity, strokeColor } = options;
+    let elementCount = 0;
+
+    // 1. Calculate Padovan Sequence
+    // Determine number of terms based on complexity/density
+    const numTerms = Math.max(10, Math.floor(complexity * 3 + density / 5) + 5);
+    const sequence = [1, 1, 1]; // P(0), P(1), P(2)
+    for (let n = 3; n < numTerms; n++) {
+        // Formula: P(n) = P(n-2) + P(n-3)
+        sequence[n] = sequence[n - 2] + sequence[n - 3];
+        // Basic check for excessively large numbers (optional, depends on expected numTerms)
+        if (sequence[n] > 1e6) {
+             console.warn("Padovan sequence value exceeded limit, stopping early.");
+             break;
+        }
+    }
+     if (sequence.length <= 3) {
+         console.warn("Padovan sequence too short to draw.");
+         return { elementCount: 0, sequence: 'Padovan (Too Short)' };
+     }
+
+
+    // 2. Visualize as Line Spiral
+    const sizeScale = scale * 5; // Adjust this factor to control overall size
+    const angleIncrement = (2 * Math.PI) / 3; // Rotate 120 degrees (fits triangle spiral pattern)
+
+    // Starting position (center) and angle
+    let currentX = width / 2;
+    let currentY = height / 2;
+    let currentAngle = 0; // Start pointing right (0 radians)
+
+    // Create a group for the spiral elements
+    const spiralGroup = createSVGElement('g', {
+        stroke: strokeColor, // Apply base stroke color to group
+        'stroke-width': strokeWeight,
+        opacity: opacity
+    }, parent);
+
+
+    // Loop through sequence terms (skip initial 1,1,1)
+    for (let i = 3; i < sequence.length; i++) {
+        const segmentLength = Math.max(1, sequence[i] * sizeScale); // Length of the current line segment
+
+        // Calculate the end point of the current segment
+        const nextX = currentX + segmentLength * Math.cos(currentAngle);
+        const nextY = currentY + segmentLength * Math.sin(currentAngle);
+
+        // Draw the line segment
+        createSVGElement('line', {
+            x1: currentX,
+            y1: currentY,
+            x2: nextX,
+            y2: nextY,
+            // Optional: Vary color per segment
+            stroke: randomChoice(palette) || strokeColor,
+            // Optional: Vary stroke width slightly?
+            // 'stroke-width': strokeWeight * random(0.8, 1.2)
+        }, spiralGroup); // Add line to the spiral group
+
+        elementCount++;
+
+        // Update current position to the end of the segment
+        currentX = nextX;
+        currentY = nextY;
+
+        // Update the angle for the next segment
+        currentAngle += angleIncrement;
+    }
+
+    console.log(`Generated Padovan sequence with ${sequence.length} terms.`);
+    return { elementCount, sequenceName: 'Padovan', terms: sequence.length };
+}
+
+
+/**
+ * Generates an SVG pattern based on Recamán's sequence.
+ * Typically visualized as a series of connecting semicircles/arcs.
+ * @param {SVGElement} parent - The parent SVG group element (<g>) to append shapes to.
+ * @param {object} options - The generation options object.
+ * @param {string[]} palette - The array of hex color strings for the current palette.
+ * @returns {object} An object containing generation results (e.g., elementCount).
+ */
+
+
+///// RECAMAN
+
+
+function generateRecamanPattern(parent, options, palette) {
+    console.log("Generating Recamán's sequence pattern...");
+    const { viewportWidth: width, viewportHeight: height, complexity, density, scale, strokeWeight, opacity, strokeColor } = options;
+    let elementCount = 0;
+
+    // 1. Calculate Recamán's Sequence
+    const numTerms = Math.max(10, Math.floor(complexity * 5 + density / 2)); // Determine number of terms
+    const sequence = [0]; // a(0) = 0
+    const usedNumbers = new Set([0]); // Keep track of numbers used in the sequence
+
+    for (let n = 1; n < numTerms; n++) {
+        const previousTerm = sequence[n - 1];
+        const backward = previousTerm - n; // Potential next term by subtracting n
+
+        // Check if backward step is valid (positive and not already used)
+        if (backward > 0 && !usedNumbers.has(backward)) {
+            sequence[n] = backward;
+        } else {
+            // Otherwise, step forward
+            sequence[n] = previousTerm + n;
+        }
+        // Add the new term to the set of used numbers
+        usedNumbers.add(sequence[n]);
+
+        // Optional: Check for very large numbers if needed
+        if (sequence[n] > 1e6) {
+             console.warn("Recamán sequence value exceeded limit, stopping early.");
+             break;
+        }
+    }
+
+    if (sequence.length <= 1) {
+        console.warn("Recamán sequence too short to draw.");
+        return { elementCount: 0, sequence: 'Recamán (Too Short)' };
+    }
+
+    // 2. Visualize as Alternating Arcs
+    const baselineY = height / 2; // Draw arcs relative to the vertical center
+
+    // Determine the range of sequence values to scale appropriately
+    let minVal = 0;
+    let maxVal = 0;
+    sequence.forEach(val => {
+        if (val < minVal) minVal = val;
+        if (val > maxVal) maxVal = val;
+    });
+    const sequenceRange = Math.max(1, maxVal - minVal); // Avoid division by zero
+
+    // Calculate scaling factor to fit the sequence range within ~80% of viewport width
+    const targetWidth = width * 0.8;
+    const effectiveScale = scale * (targetWidth / sequenceRange);
+
+    // Calculate offset to center the drawing horizontally
+    const drawingWidth = sequenceRange * effectiveScale;
+    const offsetX = (width - drawingWidth) / 2 - (minVal * effectiveScale); // Adjust offset by minVal
+
+    // Create a group for the arcs, applying centering transform and base styles
+    const arcGroup = createSVGElement('g', {
+        transform: `translate(${offsetX.toFixed(2)}, 0)`, // Center horizontally
+        stroke: strokeColor,
+        'stroke-width': strokeWeight,
+        opacity: opacity,
+        fill: 'none' // Arcs are not filled
+    }, parent);
+
+    // Loop through sequence terms to draw arcs between consecutive points
+    for (let n = 1; n < sequence.length; n++) {
+        const val1 = sequence[n - 1];
+        const val2 = sequence[n];
+
+        // Map sequence values to horizontal screen coordinates
+        const x1 = val1 * effectiveScale;
+        const x2 = val2 * effectiveScale;
+
+        // Calculate arc properties
+        const diameter = Math.abs(x2 - x1);
+        const radius = diameter / 2;
+
+        // Skip drawing if the arc is too small to be visible
+        if (radius < 0.1) continue;
+
+        // Determine arc direction (sweep-flag): 0 = clockwise, 1 = counter-clockwise
+        // Alternate direction based on step number 'n'
+        const sweepFlag = n % 2;
+
+        // Create the SVG path data string for the arc
+        // M = MoveTo start point
+        // A = ArcTo: rx ry x-axis-rotation large-arc-flag sweep-flag x y
+        const d = `M ${x1.toFixed(2)} ${baselineY} A ${radius.toFixed(2)} ${radius.toFixed(2)} 0 0 ${sweepFlag} ${x2.toFixed(2)} ${baselineY}`;
+
+        // Create the path element for the arc
+        createSVGElement('path', {
+            d: d,
+            stroke: randomChoice(palette) || strokeColor // Use random color from palette
+        }, arcGroup); // Add arc to the transformed group
+
+        elementCount++;
+    }
+
+    console.log(`Generated Recamán sequence with ${sequence.length} terms.`);
+    return { elementCount, sequenceName: 'Recamán', terms: sequence.length };
+
+}
 
 // ----- Animation Functions -----
 
