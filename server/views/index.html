@@ -14,8 +14,8 @@
             <button id="generate-btn">Generate</button>
             <button id="stop-animation-btn" title="Stop Animation">
                 <img src="/assets/CASS-STOP.svg" alt="Stop" class="button-icon">
-            <button id="download-btn" title="Download SVG">⬇SVG</button>
-            <button id="download-json-btn" title="Download Generation Data">⬇JSON</button>
+            <button id="download-btn" title="Download SVG">SVG</button>
+            <button id="download-json-btn" title="Download Generation Data">JSON</button>
             <button id="toggle-right" title="Toggle Color & Math Controls">Pallette</button>
         </div>
     </header>
@@ -61,6 +61,13 @@
                     <label>Max Recursion (Depth)</label>
                     <input type="range" id="max-recursion" min="1" max="10" value="4"> <span class="value-display">4</span>
                 </div>
+
+                <div class="control-group">
+                    <label>Rose Petal Param (n)</label>
+                    <input type="range" id="rose-n-param" min="1" max="12" step="1" value="3">
+                    <span class="value-display">3</span>
+                </div>
+
                 <div class="control-group">
                     <label>Stroke Weight</label>
                     <input type="range" id="stroke-weight" min="0" max="20" step="0.25" value="1"> <span class="value-display">1</span>

@@ -1,38 +1,34 @@
-// rose.js
-
-
 // public/js/modules/patterns/rose.js
 
 // ----- MODULE IMPORTS -----
 // Import necessary utilities
 import { createSVGElement, randomChoice } from '../utils.js';
-// Import state if needed
+// Import color utilities for fill handling
+import { getRandomFill } from '../colorUtils.js';
+// Import state if needed (not directly used here)
 // import { state } from '../state.js';
-// Import color utilities if needed
-// import { getRandomFill } from '../colorUtils.js';
-// Import random utils if needed
-// import { random, randomInt } from '../utils.js';
 
 
 /**
  * Generates patterns based on Rose Curves (r = a * cos(n * theta)).
+ * Uses 'roseNParam' from options for the 'n' value.
+ * Applies fill based on 'fillType' option.
  * @param {SVGElement} parent - The parent SVG group element (<g>).
- * @param {object} options - Generation options.
+ * @param {object} options - Generation options, including roseNParam, fillType.
  * @param {string[]} palette - Color palette.
  * @returns {object} Generation results.
  */
 export function generateRoseCurvePattern(parent, options, palette) {
     console.log("Generating Rose Curve pattern...");
     // Destructure options
-    const { viewportWidth: width, viewportHeight: height, complexity, density, scale, strokeWeight, opacity, strokeColor } = options;
+    const { viewportWidth: width, viewportHeight: height, density, scale, strokeWeight, opacity, strokeColor, roseNParam, fillType } = options;
     let elementCount = 0;
 
     // 1. Determine Rose Curve parameters 'a' and 'n'
-    // 'a' controls the maximum radius (size) - base it on viewport and scale
-    const a = Math.min(width, height) * 0.4 * scale;
-    // 'n' controls the number/shape of petals - base it on complexity
-    // Let's map complexity (1-20) to n (1-10) for integer values common in examples
-    const n = Math.max(1, Math.round(complexity / 2)); // Ensure n is at least 1
+    const a = Math.min(width, height) * 0.4 * scale; // Size parameter
+    // Use the value directly from the options (slider)
+    // Ensure n is at least a small positive number to avoid issues with Math.cos(0) always being 1 if n=0
+    const n = Math.max(0.1, roseNParam);
 
     // 2. Calculate points along the curve
     // Number of steps determines smoothness - base it on density
@@ -40,10 +36,8 @@ export function generateRoseCurvePattern(parent, options, palette) {
     const points = [];
     const cx = width / 2; // Center X
     const cy = height / 2; // Center Y
-
-    // Angle range: 0 to 2*PI generally ensures the curve closes for integer n
-    const angleRange = (n % 2 !== 0) ? Math.PI * 2 : Math.PI; // Optimization: PI is enough if n is even
-    const endAngle = Math.PI * 2; // Safer to always go to 2*PI to ensure closure
+    // Loop 0 to 2*PI to ensure curve closes, especially for fractional n
+    const endAngle = Math.PI * 2;
 
     console.log(`Rose Curve params: a=${a.toFixed(1)}, n=${n}, steps=${steps}`);
 
@@ -57,20 +51,23 @@ export function generateRoseCurvePattern(parent, options, palette) {
         const x = cx + r * Math.cos(theta);
         const y = cy + r * Math.sin(theta);
 
-        points.push(`${x.toFixed(2)},${y.toFixed(2)}`);
+        points.push(`${x.toFixed(2)},${y.toFixed(2)}`); // Add point with fixed precision
     }
 
     // 3. Draw the curve as an SVG path
     if (points.length > 1) {
-        // Create the 'd' attribute string for the path
-        const d = `M ${points[0]} L ${points.slice(1).join(' L ')}`;
+        // Create the 'd' attribute string for the path: Move to start, Line to subsequent points, Close path
+        const d = `M ${points[0]} L ${points.slice(1).join(' L ')} Z`;
+
+        // Determine fill based on options using imported function
+        const fillValue = (fillType === 'none') ? 'none' : getRandomFill(palette, options);
 
         // Create the path element (uses imported createSVGElement and randomChoice)
         createSVGElement('path', {
             d: d,
-            stroke: randomChoice(palette) || strokeColor, // Use random color from palette
+            stroke: randomChoice(palette) || strokeColor, // Vary stroke color
             'stroke-width': strokeWeight,
-            fill: 'none', // Rose curves are typically not filled
+            fill: fillValue, // Apply determined fill
             opacity: opacity
          }, parent);
         elementCount = 1; // Count the path as one element
@@ -78,6 +75,6 @@ export function generateRoseCurvePattern(parent, options, palette) {
         console.warn("Not enough points generated for Rose Curve path.");
     }
 
-    // Return results
+    // Return results, including parameters used
     return { elementCount, pattern: 'Rose Curve', nParam: n, amplitude: a.toFixed(2) };
 }

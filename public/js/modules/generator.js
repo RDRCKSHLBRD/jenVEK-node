@@ -64,6 +64,7 @@ function getOptions() {
         capturedX: state.capturedX,
         capturedY: state.capturedY,
         capturedV: state.capturedV,
+        roseNParam: parseFloat(dom.roseNParam.value),
     };
     return state.currentOptions;
 }
