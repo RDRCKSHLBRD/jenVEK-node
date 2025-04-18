@@ -8,14 +8,15 @@
 </head>
 <body>
     <header>
-        <div class="logo">jenVek | v2</div>
+        <div class="logo"><img src="/assets/JENVEK1.svg" alt="jenVek Logo" class="h-8"></div>
         <div class="header-controls">
-            <button id="toggle-left" title="Toggle Generator Controls">☰</button>
+            <button id="toggle-left" title="Toggle Generator Controls">controls</button>
             <button id="generate-btn">Generate</button>
-            <button id="stop-animation-btn" title="Stop Animation">⛔</button>
-            <button id="download-btn" title="Download SVG">⬇️ SVG</button>
-            <button id="download-json-btn" title="Download Generation Data">⬇️ JSON</button>
-            <button id="toggle-right" title="Toggle Color & Math Controls">⚙️</button>
+            <button id="stop-animation-btn" title="Stop Animation">
+                <img src="/assets/CASS-STOP.svg" alt="Stop" class="button-icon">
+            <button id="download-btn" title="Download SVG">⬇SVG</button>
+            <button id="download-json-btn" title="Download Generation Data">⬇JSON</button>
+            <button id="toggle-right" title="Toggle Color & Math Controls">Pallette</button>
         </div>
     </header>
 
@@ -80,7 +81,9 @@
                      <select id="viewport-preset">
                         <option value="custom">Custom</option>
                         <option value="mobile">Mobile (375x667)</option>
+                        <option value="mobile_landscape">Mobile Landscape (667x375)</option>
                         <option value="tablet">Tablet (768x1024)</option>
+                        <option value="tablet_landscape">Tablet Landscape (1024x768)</option>
                         <option value="desktop">Desktop (1440x900)</option>
                         <option value="hd">HD (1920x1080)</option>
                         <option value="square_1k">1000x1000</option>
@@ -105,13 +108,17 @@
 
         <div class="canvas-container">
             <svg id="svg-canvas" width="800" height="600" xmlns="http://www.w3.org/2000/svg">
-                <defs></defs> </svg>
-            <div id="cursor-info">X: 0, Y: 0</div>
+                <defs></defs>
+            </svg>
+
+            <div class="info-overlay">
+                 <span id="captured-coords"></span>
+                 <div id="cursor-info">X: 0, Y: 0</div>
+            </div>
             <div class="capture-controls">
                 <button id="capture-x" title="Capture current X coordinate">X</button>
                 <button id="capture-y" title="Capture current Y coordinate">Y</button>
                 <button id="capture-v" title="Capture current X,Y as a vector">V</button>
-                 <span id="captured-coords"></span>
             </div>
         </div>
 
