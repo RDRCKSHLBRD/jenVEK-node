@@ -51,7 +51,9 @@ export function cacheDOMElements() {
     dom.lineWaveFrequency = document.getElementById('line-wave-frequency');
     dom.strokeWeight = document.getElementById('stroke-weight');
     dom.scale = document.getElementById('scale');
-    dom.opacity = document.getElementById('opacity');
+    // dom.opacity = document.getElementById('opacity'); // Assuming primary is in right sidebar
+
+    // --- Viewport Controls (Often in Generator Controls) ---
     dom.viewportPreset = document.getElementById('viewport-preset');
     dom.customWidth = document.getElementById('custom-width');
     dom.customHeight = document.getElementById('custom-height');
@@ -64,8 +66,20 @@ export function cacheDOMElements() {
     dom.bgColor = document.getElementById('bg-color');
     dom.strokeColor = document.getElementById('stroke-color');
     dom.fillType = document.getElementById('fill-type');
+    dom.opacity = document.getElementById('opacity'); // Primary opacity control
     dom.animation = document.getElementById('animation');
     dom.animationType = document.getElementById('animation-type');
+
+    // --- Math Controls (Top Sidebar - NEW) ---
+    dom.curveSmoothing = document.getElementById('curve-smoothing');
+    dom.splineTension = document.getElementById('spline-tension');
+    dom.lissajousA = document.getElementById('lissajous-a');
+    dom.lissajousB = document.getElementById('lissajous-b');
+    dom.lissajousDelta = document.getElementById('lissajous-delta');
+    dom.spiralType = document.getElementById('spiral-type');
+    dom.spiralA = document.getElementById('spiral-a');
+    dom.spiralB = document.getElementById('spiral-b');
+    // Add more math control IDs here as they are added to index.html
 
     // --- Header Buttons ---
     dom.generateBtn = document.getElementById('generate-btn');
@@ -74,10 +88,13 @@ export function cacheDOMElements() {
     dom.downloadJsonBtn = document.getElementById('download-json-btn');
     dom.toggleLeftBtn = document.getElementById('toggle-left');
     dom.toggleRightBtn = document.getElementById('toggle-right');
+    dom.toggleMathBtn = document.getElementById('toggle-math'); // Cache the new button
 
     // --- Sidebars ---
-    dom.leftSidebar = document.querySelector('.left-sidebar');
-    dom.rightSidebar = document.querySelector('.right-sidebar');
+    // Use getElementById now that we've added IDs in the HTML
+    dom.leftSidebar = document.getElementById('left-sidebar');
+    dom.rightSidebar = document.getElementById('right-sidebar');
+    dom.mathSidebar = document.getElementById('math-sidebar');   // Cache the new sidebar
 
     // --- Canvas Area Elements ---
     dom.cursorInfo = document.getElementById('cursor-info');
@@ -97,7 +114,7 @@ export function cacheDOMElements() {
         if (display) {
             // Use input.id which should be unique
             const displayKey = input.id + 'Display';
-            dom[displayKey] = display; // e.g., dom.lineSpacingDisplay, dom.lineWaveAmplitudeDisplay etc.
+            dom[displayKey] = display; // e.g., dom.lineSpacingDisplay, dom.splineTensionDisplay etc.
             display.textContent = input.value;
             // Add listener to update display when range value changes
             input.addEventListener('input', () => {
@@ -108,21 +125,13 @@ export function cacheDOMElements() {
             });
         } else {
             // Only warn if the input itself was successfully cached
-            if (dom[input.id]) {
+            // Check if the input element itself has been cached in the dom object
+            const inputCached = Object.values(dom).includes(input);
+            if (inputCached) {
                  console.warn(`Value display span not found for range input: #${input.id}`);
             }
         }
     });
 
-    // Check for any missing elements after trying to cache all (Optional strict check)
-    // const requiredIDs = [ /* List all expected IDs here */ ];
-    // requiredIDs.forEach(id => {
-    //     if (!dom[id]) {
-    //         console.error(`Post-cache check: DOM element #${id} is missing!`);
-    //     }
-    // });
-
-
     console.log("DOM elements cached:", Object.keys(dom).length);
 }
-

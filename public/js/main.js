@@ -2,7 +2,7 @@
 
 // ----- MODULE IMPORTS -----
 import { state } from './modules/state.js';
-import { cacheDOMElements, dom } from './modules/dom.js';
+import { cacheDOMElements, dom } from './modules/dom.js'; // Ensure dom is imported
 import { populateColorSelectors } from './modules/colorUtils.js';
 // Import ALL UI functions now
 import {
@@ -15,7 +15,7 @@ import { downloadSVG, downloadJSON } from './modules/download.js';
 // ====================== Initialization Function ======================
 async function initApp() {
     console.log("Initializing jenVek SVG Generator v2...");
-    cacheDOMElements();
+    cacheDOMElements(); // Cache DOM elements first
 
     // Fetch Color Data
     try {
@@ -39,13 +39,18 @@ async function initApp() {
              ]
         };
         alert(`Could not load color palettes: ${error.message}. Using fallback colors.`);
-        populateColorSelectors();
+        // Call populateColorSelectors even on error to potentially show fallback
+        // populateColorSelectors(); // Moved to finally block
+    } finally {
+         // Populate Color Selectors regardless of success/failure (uses fallback if needed)
+         // Ensure the necessary dom elements are cached before calling
+         if (state.allColors && Object.keys(state.allColors).length > 0 && dom.colorCategory && dom.colorPalette) {
+              populateColorSelectors();
+         } else {
+             console.warn("Could not populate color selectors - missing data or DOM elements.");
+         }
     }
 
-    // Populate Color Selectors
-    if (state.allColors && Object.keys(state.allColors).length > 0 && dom.colorCategory && !dom.colorCategory.disabled) {
-         populateColorSelectors();
-    }
 
     // Attach Event Listeners (using imported functions)
     if (dom.generateBtn) dom.generateBtn.addEventListener('click', generateSVG);
@@ -66,10 +71,25 @@ async function initApp() {
     // Sidebar toggles
     if (dom.toggleLeftBtn && dom.leftSidebar) {
         dom.toggleLeftBtn.addEventListener('click', () => dom.leftSidebar.classList.toggle('collapsed'));
+    } else {
+         console.warn("Left toggle button or left sidebar not found/cached.");
     }
     if (dom.toggleRightBtn && dom.rightSidebar) {
         dom.toggleRightBtn.addEventListener('click', () => dom.rightSidebar.classList.toggle('collapsed'));
+    } else {
+         console.warn("Right toggle button or right sidebar not found/cached.");
     }
+    // *** ADDED Math Sidebar Toggle Logic ***
+    if (dom.toggleMathBtn && dom.mathSidebar) {
+        dom.toggleMathBtn.addEventListener('click', () => {
+            dom.mathSidebar.classList.toggle('collapsed');
+            // Optional: Add/remove a class to 'main' or '.canvas-container' if needed for padding adjustments
+            // document.querySelector('main').classList.toggle('top-sidebar-open', !dom.mathSidebar.classList.contains('collapsed'));
+        });
+    } else {
+        console.warn("Math toggle button or math sidebar not found/cached.");
+    }
+
 
     // Mouse movement tracking
     if (dom.svg) {
@@ -81,12 +101,9 @@ async function initApp() {
     }
 
     // Window resize listener
-    window.addEventListener('resize', () => {
-        // Use imported function directly now
-        handleViewportChange();
-    });
+    window.addEventListener('resize', handleViewportChange); // Use imported function directly
 
-    // Initial UI Update
+    // Initial UI Update (Run after caching and event listeners are set up)
     updateUIFromState();
 
     console.log("App Initialized.");

@@ -1,144 +1,249 @@
 /* --- CSS Variables --- */
 :root {
-  --submarine: #264651;
-  --details: #0E5360;
-  --beyond: #0297A1;
-  --smoothtext: #93bedb;
-  --carmichael: #304842;
-  --snow-clouds: #82B5B8;
-  --river: #306CB8;
-  --blue-pebble: #367D9B;
-  --ajna: #2666C6;
-  --turquoise: #3DA3A8;
-
-  /* UI Colors */
-  --bg-color: #f4f7f9;
-  --text-color: #333;
-  --header-bg: #E0E2D7;
-  --header-text: #ffffff;
-  --sidebar-bg: #ffffff;
-  --footer-bg: #e8edf0;
-  --button-primary: var(--details);
-  --button-hover: var(--beyond);
-  --button-secondary: #6c757d;
-  --button-secondary-hover: #5a6268;
-  --button-danger: #dc3545;
-  --button-danger-hover: #541d05; /* Darker red hover */
-  --border-color: #d1dce4;
-  --input-bg: #fff;
-  --input-border: #ced4da;
-  --label-color: #495057;
-  --shadow-color: rgba(0, 0, 0, 0.1);
-}
-
-/* Reset and Base styles */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html { font-size: 14px; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; color: var(--text-color); background-color: var(--bg-color); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-
-/* Header Styles */
-header { background-color: var(--header-bg); padding: 0.6rem 1rem; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; box-shadow: 0 2px 4px var(--shadow-color); z-index: 100; }
-.logo { display: flex; align-items: center; }
-.logo img { height: 2rem; width: auto; vertical-align: middle; }
-.header-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
-.header-controls button { background: none; border: 1px solid rgba(150, 150, 150, 0.5); color:#617068; padding: 0.4rem; margin-left: 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.9rem; transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s; display: inline-flex; justify-content: center; align-items: center; min-height: 32px; min-width: 32px; }
-.header-controls button:hover { background-color: rgba(0, 0, 0, 0.05); border-color: rgba(100, 100, 100, 0.8); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-.button-icon { height: 1em; width: 1em; display: block; }
-#generate-btn { background-color: #b5c6bd; border-color: #9ab0a6; color: #333; padding: 0.4rem 0.8rem; /* Keep text padding */}
-#generate-btn:hover { background-color: var(--beyond); border-color: var(--beyond); color: white; }
-#stop-animation-btn { background-color: var(--button-danger); border-color: var(--button-danger); padding: 0.4rem; /* Ensure padding is consistent for icon */}
-#stop-animation-btn:hover { background-color: var(--button-danger-hover); border-color: var(--button-danger-hover); }
-#stop-animation-btn .button-icon { fill: white; }
-/* Keep text padding for download buttons */
-#download-btn, #download-json-btn { padding: 0.4rem 0.8rem; }
-
-/* Main Content Layout */
-main { display: flex; flex: 1; overflow: hidden; position: relative; }
-
-/* Sidebar Styles */
-.sidebar { position: absolute; top: 0; bottom: 0; width: 280px; background-color: var(--sidebar-bg); box-shadow: 0 0 15px var(--shadow-color); display: flex; flex-direction: column; transition: transform 0.3s ease-in-out; z-index: 50; border: none; overflow: hidden; }
-.left-sidebar { left: 0; transform: translateX(-100%); }
-.right-sidebar { right: 0; transform: translateX(100%); }
-.sidebar:not(.collapsed) { transform: translateX(0); }
-.sidebar-content { padding: 1rem; overflow-y: auto; flex-grow: 1; }
-.sidebar h3 { font-size: 1.1rem; color: var(--details); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); }
-
-/* Control Group Styles */
-.control-group { margin-bottom: 1rem; }
-.control-group label { display: block; margin-bottom: 0.4rem; font-size: 0.85rem; font-weight: 500; color: var(--label-color); }
-.control-group select, .control-group input[type="number"], .control-group input[type="color"] { width: 100%; padding: 0.5rem; border: 1px solid var(--input-border); border-radius: 4px; font-size: 0.9rem; background-color: var(--input-bg); }
-.control-group input[type="range"] { width: calc(100% - 40px); vertical-align: middle; }
-.value-display { display: inline-block; width: 35px; text-align: right; font-size: 0.85rem; color: var(--details); vertical-align: middle; margin-left: 5px; }
-.control-group input[type="color"] { height: 38px; padding: 0.2rem; }
-.checkbox-group label { display: inline-block; margin-right: 1rem; font-weight: normal; }
-.checkbox-group input[type="checkbox"] { margin-right: 0.3rem; vertical-align: middle; }
-
-/* Color palette preview */
-.color-palette-preview { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 0.5rem; margin-bottom: 1rem; padding: 0.5rem; background-color: #f8f9fa; border-radius: 4px; border: 1px solid var(--border-color); min-height: 30px; }
-.color-box { width: 20px; height: 20px; border-radius: 3px; border: 1px solid rgba(0, 0, 0, 0.1); cursor: pointer; transition: transform 0.1s ease; }
-.color-box:hover { transform: scale(1.1); }
-
-/* Canvas Container */
-.canvas-container { flex: 1; display: flex; justify-content: center; align-items: center; padding: 1rem; overflow: auto; position: relative; }
-#svg-canvas { border: 1px solid var(--border-color); background-color: white; box-shadow: 0 4px 12px var(--shadow-color); max-width: 100%; max-height: 100%; display: block; }
-
-/* --- Info/Stats Display --- */
-/* NEW: Container for bottom-left info */
-.info-overlay {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    z-index: 10;
-    pointer-events: none; /* Don't interfere with SVG events */
-    display: flex;
-    flex-direction: column; /* Stack items vertically */
-    align-items: flex-start; /* Align items to the left */
-    gap: 4px; /* Space between the info boxes */
-}
-
-/* MODIFIED: Remove absolute positioning from individual items */
-#cursor-info,
-#captured-coords {
-    /* position: absolute; */ /* Removed */
-    /* bottom: 10px; */ /* Removed */
-    /* left: 10px; */ /* Removed */
-    font-size: 0.8rem;
-    padding: 4px 8px;
-    background-color: rgba(255, 255, 255, 0.9);
-    border-radius: 4px;
-    border: 1px solid var(--border-color);
-    /* z-index: 10; */ /* Removed */
-    /* pointer-events: none; */ /* Removed */
-    width: fit-content; /* Prevent stretching */
-}
-
-/* Keep specific styling for captured coords */
-#captured-coords {
-    /* left: auto; */ /* Removed */
-    /* right: 10px; */ /* Removed */
-    background-color: rgba(230, 245, 255, 0.9);
-    color: var(--river);
-    font-weight: 300; /* Adjusted from bold */
-    order: 1; /* Ensure it appears above cursor-info in the flex column */
-}
-
-#cursor-info {
-    order: 2; /* Ensure it appears below captured-coords */
-}
-/* --- End Info/Stats Display Changes --- */
-
-
-#math-output, #svg-stats { font-size: 0.85rem; line-height: 1.4; margin-top: 0.5rem; padding: 0.5rem; background-color: #f8f9fa; border-radius: 4px; max-height: 150px; overflow-y: auto; }
-#math-output strong { color: var(--details); }
-
-/* Capture Buttons */
-.capture-controls { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; z-index: 10; }
-.capture-controls button { background-color: var(--button-secondary); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 0.9rem; font-weight: 300; cursor: pointer; transition: background-color 0.2s; line-height: 30px; padding: 0; }
-.capture-controls button:hover { background-color: var(--button-secondary-hover); }
-
-/* Footer */
-footer { background-color: var(--footer-bg); border-top: 1px solid var(--border-color); flex-shrink: 0; padding: 0.5rem 1rem; text-align: center; font-size: 0.8rem; color: #666; }
-
-/* Responsive adjustments */
-@media (max-width: 768px) { /* ... existing responsive styles ... */ }
-@media (max-width: 480px) { /* ... existing responsive styles ... */ }
+    --submarine: #264651;
+    --details: #0E5360;
+    --beyond: #0297A1;
+    --smoothtext: #93bedb;
+    --carmichael: #304842;
+    --snow-clouds: #82B5B8;
+    --river: #306CB8;
+    --blue-pebble: #367D9B;
+    --ajna: #2666C6;
+    --turquoise: #3DA3A8;
+  
+    /* UI Colors */
+    --bg-color: #f4f7f9;
+    --text-color: #333;
+    --header-bg: #E0E2D7;
+    --header-text: #ffffff;
+    --sidebar-bg: #ffffff;
+    --footer-bg: #e8edf0;
+    --button-primary: var(--details);
+    --button-hover: var(--beyond);
+    --button-secondary: #6c757d;
+    --button-secondary-hover: #5a6268;
+    --button-danger: #dc3545;
+    --button-danger-hover: #541d05; /* Darker red hover */
+    --border-color: #d1dce4;
+    --input-bg: #fff;
+    --input-border: #ced4da;
+    --label-color: #495057;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Reset and Base styles */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { font-size: 14px; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; color: var(--text-color); background-color: var(--bg-color); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  
+  /* Header Styles */
+  header { background-color: var(--header-bg); padding: 0.6rem 1rem; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; box-shadow: 0 2px 4px var(--shadow-color); z-index: 100; }
+  .logo { display: flex; align-items: center; }
+  .logo img { height: 2rem; width: auto; vertical-align: middle; }
+  .header-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+  /* Common style for header toggle buttons */
+  .header-controls button[id^="toggle-"] {
+      background: none;
+      border: 1px solid rgba(150, 150, 150, 0.5);
+      color:#617068;
+      padding: 0.4rem 0.8rem; /* Text padding */
+      margin-left: 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 32px;
+  }
+  .header-controls button[id^="toggle-"]:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+      border-color: rgba(100, 100, 100, 0.8);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  }
+  /* Specific styles for other header buttons */
+  .header-controls button:not([id^="toggle-"]) {
+      background: none;
+      border: 1px solid rgba(150, 150, 150, 0.5);
+      color:#617068;
+      padding: 0.4rem;
+      margin-left: 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 32px;
+      min-width: 32px;
+  }
+  .header-controls button:not([id^="toggle-"]):hover {
+      background-color: rgba(0, 0, 0, 0.05);
+      border-color: rgba(100, 100, 100, 0.8);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  }
+  .button-icon { height: 1em; width: 1em; display: block; }
+  #generate-btn { background-color: #b5c6bd; border-color: #9ab0a6; color: #333; padding: 0.4rem 0.8rem; }
+  #generate-btn:hover { background-color: var(--beyond); border-color: var(--beyond); color: white; }
+  #stop-animation-btn { background-color: var(--button-danger); border-color: var(--button-danger); padding: 0.4rem; }
+  #stop-animation-btn:hover { background-color: var(--button-danger-hover); border-color: var(--button-danger-hover); }
+  #stop-animation-btn .button-icon { fill: white; }
+  #download-btn, #download-json-btn { padding: 0.4rem 0.8rem; }
+  
+  /* Main Content Layout */
+  main { display: flex; flex: 1; overflow: hidden; position: relative; /* Needed for absolute positioned sidebars */ }
+  
+  /* --- General Sidebar Styles --- */
+  .sidebar {
+      position: absolute;
+      background-color: var(--sidebar-bg);
+      box-shadow: 0 0 15px var(--shadow-color);
+      display: flex;
+      flex-direction: column;
+      /* Apply the same transition to all sidebars */
+      transition: transform 0.3s ease-in-out;
+      z-index: 50; /* Ensure sidebars are above canvas */
+      border: none;
+      overflow: hidden;
+  }
+  
+  /* --- Left/Right Sidebar Specific Styles --- */
+  .left-sidebar, .right-sidebar {
+      top: 0;
+      bottom: 0;
+      width: 280px; /* Or your desired width */
+  }
+  .left-sidebar { left: 0; transform: translateX(-100%); }
+  .right-sidebar { right: 0; transform: translateX(100%); }
+  /* Expanded state for Left/Right */
+  .left-sidebar:not(.collapsed), .right-sidebar:not(.collapsed) {
+      transform: translateX(0);
+  }
+  
+  /* --- Top Sidebar Styles --- */
+  .top-sidebar {
+      top: 0;
+      left: 0;
+      right: 0;
+      width: 100%; /* Span full width */
+      height: auto; /* Height determined by content */
+      max-height: 250px; /* Limit max height, adjust as needed */
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: 0 2px 8px var(--shadow-color);
+      transform: translateY(-100%); /* Start hidden above */
+  }
+  /* Expanded state for Top */
+  .top-sidebar:not(.collapsed) {
+      transform: translateY(0); /* Slide down into view */
+  }
+  
+  /* --- Sidebar Content (Common) --- */
+  .sidebar-content {
+      padding: 1rem;
+      overflow-y: auto; /* Allow scrolling if content exceeds height */
+      flex-grow: 1;
+      /* Improve scrollbar appearance (optional) */
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-color) var(--sidebar-bg);
+  }
+  .sidebar-content::-webkit-scrollbar { width: 8px; }
+  .sidebar-content::-webkit-scrollbar-track { background: var(--sidebar-bg); }
+  .sidebar-content::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 4px; border: 2px solid var(--sidebar-bg); }
+  
+  .sidebar h3 {
+      font-size: 1.1rem;
+      color: var(--details);
+      margin-top: 0; /* Remove default margin */
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+  }
+  
+  /* --- Math Section Styles --- */
+  .math-sections-container {
+      display: flex;
+      flex-direction: row; /* Arrange sections horizontally */
+      flex-wrap: wrap;     /* Allow sections to wrap onto next line */
+      gap: 1rem;           /* Space between sections */
+      width: 100%;         /* Take full width of the sidebar content area */
+  }
+  
+  .math-section {
+      flex: 1 1 180px; /* Grow, Shrink, Basis: Allow sections to grow/shrink, aiming for 180px */
+      min-width: 150px; /* Prevent sections from becoming too narrow */
+      padding: 0.75rem; /* Padding inside each section */
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background-color: #fdfdfd; /* Slightly off-white background */
+  }
+  
+  .math-section h4 {
+      font-size: 0.95rem;
+      color: var(--carmichael); /* Use a theme color */
+      margin-top: 0;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px dashed var(--border-color); /* Dashed underline for section titles */
+  }
+  /* --- End Math Section Styles --- */
+  
+  
+  /* Control Group Styles (Common for all sidebars) */
+  .control-group { margin-bottom: 1rem; }
+  /* Remove bottom margin from the last control group within a math section for tighter packing */
+  .math-section .control-group:last-child { margin-bottom: 0; }
+  .control-group label { display: block; margin-bottom: 0.4rem; font-size: 0.85rem; font-weight: 500; color: var(--label-color); }
+  .control-group select, .control-group input[type="number"], .control-group input[type="color"], .control-group input[type="text"] { width: 100%; padding: 0.5rem; border: 1px solid var(--input-border); border-radius: 4px; font-size: 0.9rem; background-color: var(--input-bg); }
+  .control-group input[type="range"] { width: calc(100% - 40px); vertical-align: middle; }
+  .value-display { display: inline-block; width: 35px; text-align: right; font-size: 0.85rem; color: var(--details); vertical-align: middle; margin-left: 5px; }
+  .control-group input[type="color"] { height: 38px; padding: 0.2rem; }
+  .checkbox-group label { display: inline-block; margin-right: 1rem; font-weight: normal; }
+  .checkbox-group input[type="checkbox"] { margin-right: 0.3rem; vertical-align: middle; }
+  
+  /* Color palette preview */
+  .color-palette-preview { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 0.5rem; margin-bottom: 1rem; padding: 0.5rem; background-color: #f8f9fa; border-radius: 4px; border: 1px solid var(--border-color); min-height: 30px; }
+  .color-box { width: 20px; height: 20px; border-radius: 3px; border: 1px solid rgba(0, 0, 0, 0.1); cursor: pointer; transition: transform 0.1s ease; }
+  .color-box:hover { transform: scale(1.1); }
+  
+  /* Canvas Container */
+  .canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem; /* Base padding */
+      overflow: auto;
+      position: relative; /* Important for absolutely positioned children */
+      transition: padding-top 0.3s ease-in-out; /* Smooth padding transition */
+  }
+  /* Add padding when top sidebar is open (requires JS to add/remove class) */
+  /* main.top-sidebar-open .canvas-container {
+      padding-top: calc(250px + 1rem); /* Adjust based on sidebar max-height + base padding */
+  /* } */
+  
+  #svg-canvas { border: 1px solid var(--border-color); background-color: white; box-shadow: 0 4px 12px var(--shadow-color); max-width: 100%; max-height: 100%; display: block; }
+  
+  /* --- Info/Stats Display --- */
+  .info-overlay { position: absolute; bottom: 10px; left: 10px; z-index: 10; pointer-events: none; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+  #cursor-info, #captured-coords { font-size: 0.8rem; padding: 4px 8px; background-color: rgba(255, 255, 255, 0.9); border-radius: 4px; border: 1px solid var(--border-color); width: fit-content; }
+  #captured-coords { background-color: rgba(230, 245, 255, 0.9); color: var(--river); font-weight: 300; order: 1; }
+  #cursor-info { order: 2; }
+  
+  #math-output, #svg-stats { font-size: 0.85rem; line-height: 1.4; margin-top: 0.5rem; padding: 0.5rem; background-color: #f8f9fa; border-radius: 4px; max-height: 150px; overflow-y: auto; }
+  #math-output strong { color: var(--details); }
+  
+  /* Capture Buttons */
+  .capture-controls { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; z-index: 10; }
+  .capture-controls button { background-color: var(--button-secondary); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 0.9rem; font-weight: 300; cursor: pointer; transition: background-color 0.2s; line-height: 30px; padding: 0; }
+  .capture-controls button:hover { background-color: var(--button-secondary-hover); }
+  
+  /* Footer */
+  footer { background-color: var(--footer-bg); border-top: 1px solid var(--border-color); flex-shrink: 0; padding: 0.5rem 1rem; text-align: center; font-size: 0.8rem; color: #666; }
+  
+  /* Responsive adjustments (Keep existing ones) */
+  @media (max-width: 768px) { /* ... */ }
+  @media (max-width: 480px) { /* ... */ }
+  
+  
