@@ -10,16 +10,9 @@ import { formatNumber } from './utils.js'; // Assuming formatNumber is in utils.
 
 /**
  * Updates various UI elements based on the current application state.
- * This includes captured coordinates display, viewport inputs, and animation toggle.
+ * Includes captured coordinates display, button feedback, viewport inputs, etc.
  */
 export function updateUIFromState() { // Ensure this export exists
-    // Ensure DOM elements are cached and available
-    // Add checks for other elements updated here if necessary
-    if (!dom.capturedCoords || !dom.customWidth || !dom.customHeight || !dom.viewportPreset || !dom.animation) {
-        console.warn("updateUIFromState: Some required DOM elements are missing or not cached.");
-        // Avoid returning early if only some elements are missing, try to update others
-    }
-
     // --- Update captured coordinates display ---
     if (dom.capturedCoords) {
         let capturedText = "";
@@ -29,45 +22,76 @@ export function updateUIFromState() { // Ensure this export exists
         if (state.capturedY !== null) {
             capturedText += ` Y: ${state.capturedY.toFixed(0)}`;
         }
-        if (state.capturedV && state.capturedV.x !== null && state.capturedV.y !== null) { // Check both x and y for vector
+        // Check if capturedV exists and has non-null x/y before displaying
+        if (state.capturedV && state.capturedV.x !== null && state.capturedV.y !== null) {
             capturedText += ` V: (${state.capturedV.x.toFixed(0)}, ${state.capturedV.y.toFixed(0)})`;
         }
-        dom.capturedCoords.textContent = capturedText.trim(); // Use trim() to remove leading/trailing spaces
+        dom.capturedCoords.textContent = capturedText.trim();
+    } else {
+        console.warn("updateUIFromState: #captured-coords element not found/cached.");
     }
 
+    // *** Update Capture Button Visual Feedback ***
+    // Use optional chaining ?. and classList.toggle for cleaner code
+    // toggle(className, force) adds if force is true, removes if force is false
+    dom.captureXBtn?.classList.toggle('captured', state.capturedX !== null);
+    dom.captureYBtn?.classList.toggle('captured', state.capturedY !== null);
+    // Consider V captured if its state object exists and has a non-null x or y
+    dom.captureVBtn?.classList.toggle('captured', state.capturedV && (state.capturedV.x !== null || state.capturedV.y !== null));
+
+
     // --- Update viewport inputs based on state ---
-    if (dom.customWidth) dom.customWidth.value = state.viewportWidth;
-    if (dom.customHeight) dom.customHeight.value = state.viewportHeight;
+    if (dom.customWidth) {
+        dom.customWidth.value = state.viewportWidth;
+    } else {
+        console.warn("updateUIFromState: #custom-width element not found/cached.");
+    }
+    if (dom.customHeight) {
+        dom.customHeight.value = state.viewportHeight;
+    } else {
+        console.warn("updateUIFromState: #custom-height element not found/cached.");
+    }
 
     if (dom.viewportPreset) {
         const currentViewport = `${state.viewportWidth}x${state.viewportHeight}`;
-        let matchedPreset = 'custom'; // Default to 'custom'
+        let matchedPreset = 'custom';
         for (const option of dom.viewportPreset.options) {
             if (option.value !== 'custom' && option.textContent.includes(currentViewport)) {
                 matchedPreset = option.value;
                 break;
             }
         }
-        dom.viewportPreset.value = matchedPreset; // Set the dropdown value
+        dom.viewportPreset.value = matchedPreset;
+    } else {
+         console.warn("updateUIFromState: #viewport-preset element not found/cached.");
     }
 
     // --- Update animation toggle state ---
     if (dom.animation) {
+        // Check if currentOptions exists before accessing animation property
         dom.animation.checked = state.currentOptions?.animation ?? false;
+    } else {
+         console.warn("updateUIFromState: #animation element not found/cached.");
     }
 
     // --- Update Range Slider Displays ---
+    // This relies on dom cache being populated correctly by cacheDOMElements
     Object.keys(dom).forEach(key => {
+        // Check if the key corresponds to a range input display (e.g., 'complexityDisplay')
         if (key.endsWith('Display') && dom[key]) {
              // Convert display key back to potential input ID (handle camelCase from hyphenated ID)
              let inputId = key.replace('Display', '');
-             inputId = inputId.replace(/([A-Z])/g, "-$1").toLowerCase(); // Convert camelCase back to hyphenated if needed
+             // Convert camelCase key back to hyphen-separated id
+             inputId = inputId.replace(/([A-Z])/g, "-$1").toLowerCase();
 
-            const inputElement = dom[inputId.replace(/-/g, '')] || document.getElementById(inputId); // Check cache first, then ID
+             // Find the input element, checking cache first, then by ID
+             // Use the cache key (camelCase) for lookup in dom object
+             const cacheKey = inputId.replace(/-/g, '');
+             const inputElement = dom[cacheKey] || document.getElementById(inputId); // Check cache first
 
-            if (inputElement && inputElement.value !== undefined) {
-                dom[key].textContent = inputElement.value;
-            }
+             if (inputElement && inputElement.value !== undefined) {
+                 dom[key].textContent = inputElement.value;
+             }
         }
     });
 }
@@ -113,7 +137,7 @@ export function updateMathInfo(info) { // Ensure this export exists
                       // Exclude elementCount as it's summarized above (or handle differently if needed)
                       .filter(([key]) => key !== 'elementCount')
                       // Format each key-value pair
-                      .map(([key, value]) => `${key}: ${typeof value === 'number' ? value.toFixed(2) : value}`)
+                      .map(([key, value]) => `${key}: ${typeof value === 'number' ? value.toFixed(2) : String(value)}`) // Convert value to string safely
                       .join(', '); // Join pairs with commas
                   // Add the details string and element count for the layer
                   html += `${details} (${formatNumber(layerInfo.elementCount || 0)} elements)</div>`;
@@ -217,12 +241,6 @@ export function handleViewportChange() { // Ensure this export exists
     dom.svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
 
     console.log(`Viewport set to: ${width}x${height}`);
-
-    // Optional: Automatically regenerate SVG on viewport change
-    // Be cautious, as this can be triggered frequently during resize or input typing.
-    // Consider debouncing this if you enable auto-regeneration.
-    // import { generateSVG } from './generator.js'; // Would need this import
-    // generateSVG();
 }
 
 /**
@@ -262,36 +280,31 @@ export function updateCursorInfo(event) { // Ensure this export exists
 
 /**
  * Captures the current mouse X coordinate (relative to SVG) into the state.
- * Updates the UI to reflect the captured coordinate.
+ * Updates the UI to reflect the captured coordinate and button state.
  */
 export function captureX() { // Ensure this export exists
-    // Store the last known mouse X coordinate from the state
     state.capturedX = state.mouseX;
-    console.log("Captured X:", state.capturedX);
-    // Update the UI display (e.g., the captured coordinates text)
-    updateUIFromState();
+    console.log("Captured X:", state.capturedX?.toFixed(2)); // Log captured value
+    updateUIFromState(); // Update display and button class
 }
 
 /**
  * Captures the current mouse Y coordinate (relative to SVG) into the state.
- * Updates the UI to reflect the captured coordinate.
+ * Updates the UI to reflect the captured coordinate and button state.
  */
 export function captureY() { // Ensure this export exists
-    // Store the last known mouse Y coordinate from the state
     state.capturedY = state.mouseY;
-    console.log("Captured Y:", state.capturedY);
-    // Update the UI display
-    updateUIFromState();
+    console.log("Captured Y:", state.capturedY?.toFixed(2)); // Log captured value
+    updateUIFromState(); // Update display and button class
 }
 
 /**
  * Captures the current mouse X and Y coordinates (relative to SVG) as a vector into the state.
- * Updates the UI to reflect the captured vector.
+ * Updates the UI to reflect the captured vector and button state.
  */
 export function captureV() { // Ensure this export exists
-    // Store the last known mouse X and Y coordinates as a vector object
     state.capturedV = { x: state.mouseX, y: state.mouseY };
-    console.log("Captured V:", state.capturedV);
-    // Update the UI display
-    updateUIFromState();
+    // Log captured value carefully checking for nulls
+    console.log("Captured V:", state.capturedV ? `(${state.capturedV.x?.toFixed(2)}, ${state.capturedV.y?.toFixed(2)})` : 'null');
+    updateUIFromState(); // Update display and button class
 }

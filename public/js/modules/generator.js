@@ -6,8 +6,7 @@ import { dom } from './dom.js'; // Make sure dom is imported
 import { getColorPalette, getRandomFill } from './colorUtils.js';
 import { updateMathInfo, updateSVGStats } from './ui.js'; // Ensure ui functions are imported
 import {
-    createSVGElement, secureRandom, getTimeSeedValue, pointsToPathString // Ensure pointsToPathString is imported
-    // Import hashing function if using string seeds, or keep simple for now
+    createSVGElement, secureRandom, getTimeSeedValue, pointsToPathString, simpleStringHash // Ensure simpleStringHash is imported if used
 } from './utils.js'; // Ensure utils functions are imported
 
 // ----- PATTERN FUNCTION IMPORTS -----
@@ -41,7 +40,8 @@ function getOptions() {
         'patternType', 'layerCount', 'complexity', 'density', 'repetition',
         'maxRecursion', 'roseNParam', 'strokeWeight', 'scale', 'opacity',
         'curveSteps', 'offsetX', 'offsetY', 'globalAngle', 'seedOverride', 'lineSpacing',
-        'lineWaveAmplitude','lineWaveFrequency','lineSpacingRatio', 'lineSpacingInvert',
+        'lineWaveAmplitude','lineWaveFrequency', 'lineArcAmount', // Ensure lineArcAmount is checked
+        'lineSpacingRatio', 'lineSpacingInvert',
         'viewportPreset', 'customWidth', 'customHeight', 'useCursor', 'useTime',
         'colorCategory', 'colorPalette', 'bgColor', 'strokeColor', 'fillType',
         'animation', 'animationType',
@@ -57,13 +57,14 @@ function getOptions() {
         // Check if the dom object itself exists AND if the specific key exists in the dom object
         if (!dom || !dom[cacheKey]) {
             // As a fallback, try getElementById directly, but log a warning if cache failed
-            if (!document.getElementById(id)) {
+            const elementById = document.getElementById(id);
+            if (!elementById) {
                 console.error(`getOptions: CRITICAL - DOM element #${id} not found in cache OR document! Cannot proceed.`);
                 return null; // Cannot proceed if element doesn't exist at all
             } else {
-                console.warn(`getOptions: DOM element #${id} was not found in dom cache, using direct lookup (check dom.js).`);
-                // Optionally, you could try to cache it here, but it's better to fix dom.js
-                // dom[cacheKey] = document.getElementById(id);
+                console.warn(`getOptions: DOM element #${id} was not found in dom cache, using direct lookup (check dom.js). Caching now.`);
+                // Attempt to cache it now if found directly
+                 dom[cacheKey] = elementById;
             }
         }
     }
@@ -103,6 +104,8 @@ function getOptions() {
             lineSpacing: parseInt(dom.lineSpacing.value,10) || 20,
             lineWaveAmplitude: parseFloat(dom.lineWaveAmplitude.value) || 0,
             lineWaveFrequency: parseFloat(dom.lineWaveFrequency.value) || 1,
+            // *** CORRECTED: Read and parse lineArcAmount from the cached element ***
+            lineArcAmount: parseFloat(dom.lineArcAmount.value) || 0, // Read from cached element, parse as float
             lineSpacingRatio: parseFloat(dom.lineSpacingRatio.value) || 1.0,
             lineSpacingInvert: dom.lineSpacingInvert.checked,
 
@@ -175,7 +178,7 @@ export function generateSVG() {
     let seed;
     if (options.seedOverride) {
         const numSeed = parseFloat(options.seedOverride);
-        // Use simpleStringHash only if parseFloat results in NaN
+        // Use simpleStringHash (imported from utils.js) only if parseFloat results in NaN
         seed = !isNaN(numSeed) ? numSeed : simpleStringHash(options.seedOverride);
         console.log(`Using seed override: ${options.seedOverride} -> ${seed}`);
     } else {
@@ -283,22 +286,9 @@ export function generateSVG() {
 
 // ----- Animation Functions -----
 // (Keep existing animation functions as they were)
-/**
- * Simple hash function to convert a string seed into a number.
- * Used when a non-numeric seed override is provided.
- * @param {string} str - The input seed string.
- * @returns {number} A numeric hash value.
- */
-function simpleStringHash(str) {
-    let hash = 0;
-    if (!str || str.length === 0) return hash;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash |= 0; // Convert to 32bit integer
-    }
-    return Math.abs(hash); // Ensure positive seed
-}
+
+// *** REMOVED the local simpleStringHash function declaration ***
+// It is now imported from utils.js at the top of the file.
 
 
 /**

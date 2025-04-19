@@ -10,6 +10,8 @@
     --blue-pebble: #367D9B;
     --ajna: #2666C6;
     --turquoise: #3DA3A8;
+    --success-green: #28a745; /* Added for feedback */
+    --success-green-border: #218838; /* Added for feedback */
   
     /* UI Colors */
     --bg-color: #f4f7f9;
@@ -102,9 +104,8 @@
       box-shadow: 0 0 15px var(--shadow-color);
       display: flex;
       flex-direction: column;
-      /* Apply the same transition to all sidebars */
       transition: transform 0.3s ease-in-out;
-      z-index: 50; /* Ensure sidebars are above canvas */
+      z-index: 50;
       border: none;
       overflow: hidden;
   }
@@ -113,11 +114,10 @@
   .left-sidebar, .right-sidebar {
       top: 0;
       bottom: 0;
-      width: 280px; /* Or your desired width */
+      width: 280px;
   }
   .left-sidebar { left: 0; transform: translateX(-100%); }
   .right-sidebar { right: 0; transform: translateX(100%); }
-  /* Expanded state for Left/Right */
   .left-sidebar:not(.collapsed), .right-sidebar:not(.collapsed) {
       transform: translateX(0);
   }
@@ -127,24 +127,22 @@
       top: 0;
       left: 0;
       right: 0;
-      width: 100%; /* Span full width */
-      height: auto; /* Height determined by content */
-      max-height: 250px; /* Limit max height, adjust as needed */
+      width: 100%;
+      height: auto;
+      max-height: 250px; /* Adjust as needed */
       border-bottom: 1px solid var(--border-color);
       box-shadow: 0 2px 8px var(--shadow-color);
-      transform: translateY(-100%); /* Start hidden above */
+      transform: translateY(-100%);
   }
-  /* Expanded state for Top */
   .top-sidebar:not(.collapsed) {
-      transform: translateY(0); /* Slide down into view */
+      transform: translateY(0);
   }
   
   /* --- Sidebar Content (Common) --- */
   .sidebar-content {
       padding: 1rem;
-      overflow-y: auto; /* Allow scrolling if content exceeds height */
+      overflow-y: auto;
       flex-grow: 1;
-      /* Improve scrollbar appearance (optional) */
       scrollbar-width: thin;
       scrollbar-color: var(--border-color) var(--sidebar-bg);
   }
@@ -155,7 +153,7 @@
   .sidebar h3 {
       font-size: 1.1rem;
       color: var(--details);
-      margin-top: 0; /* Remove default margin */
+      margin-top: 0;
       margin-bottom: 1rem;
       padding-bottom: 0.5rem;
       border-bottom: 1px solid var(--border-color);
@@ -164,35 +162,30 @@
   /* --- Math Section Styles --- */
   .math-sections-container {
       display: flex;
-      flex-direction: row; /* Arrange sections horizontally */
-      flex-wrap: wrap;     /* Allow sections to wrap onto next line */
-      gap: 1rem;           /* Space between sections */
-      width: 100%;         /* Take full width of the sidebar content area */
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 1rem;
+      width: 100%;
   }
-  
   .math-section {
-      flex: 1 1 180px; /* Grow, Shrink, Basis: Allow sections to grow/shrink, aiming for 180px */
-      min-width: 150px; /* Prevent sections from becoming too narrow */
-      padding: 0.75rem; /* Padding inside each section */
+      flex: 1 1 180px;
+      min-width: 150px;
+      padding: 0.75rem;
       border: 1px solid var(--border-color);
       border-radius: 4px;
-      background-color: #fdfdfd; /* Slightly off-white background */
+      background-color: #fdfdfd;
   }
-  
   .math-section h4 {
       font-size: 0.95rem;
-      color: var(--carmichael); /* Use a theme color */
+      color: var(--carmichael);
       margin-top: 0;
       margin-bottom: 0.75rem;
       padding-bottom: 0.4rem;
-      border-bottom: 1px dashed var(--border-color); /* Dashed underline for section titles */
+      border-bottom: 1px dashed var(--border-color);
   }
-  /* --- End Math Section Styles --- */
-  
   
   /* Control Group Styles (Common for all sidebars) */
   .control-group { margin-bottom: 1rem; }
-  /* Remove bottom margin from the last control group within a math section for tighter packing */
   .math-section .control-group:last-child { margin-bottom: 0; }
   .control-group label { display: block; margin-bottom: 0.4rem; font-size: 0.85rem; font-weight: 500; color: var(--label-color); }
   .control-group select, .control-group input[type="number"], .control-group input[type="color"], .control-group input[type="text"] { width: 100%; padding: 0.5rem; border: 1px solid var(--input-border); border-radius: 4px; font-size: 0.9rem; background-color: var(--input-bg); }
@@ -213,36 +206,58 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 1rem; /* Base padding */
+      padding: 1rem;
       overflow: auto;
-      position: relative; /* Important for absolutely positioned children */
-      transition: padding-top 0.3s ease-in-out; /* Smooth padding transition */
+      position: relative;
+      transition: padding-top 0.3s ease-in-out;
   }
-  /* Add padding when top sidebar is open (requires JS to add/remove class) */
-  /* main.top-sidebar-open .canvas-container {
-      padding-top: calc(250px + 1rem); /* Adjust based on sidebar max-height + base padding */
-  /* } */
-  
   #svg-canvas { border: 1px solid var(--border-color); background-color: white; box-shadow: 0 4px 12px var(--shadow-color); max-width: 100%; max-height: 100%; display: block; }
   
-  /* --- Info/Stats Display --- */
+  /* Info/Stats Display */
   .info-overlay { position: absolute; bottom: 10px; left: 10px; z-index: 10; pointer-events: none; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
   #cursor-info, #captured-coords { font-size: 0.8rem; padding: 4px 8px; background-color: rgba(255, 255, 255, 0.9); border-radius: 4px; border: 1px solid var(--border-color); width: fit-content; }
   #captured-coords { background-color: rgba(230, 245, 255, 0.9); color: var(--river); font-weight: 300; order: 1; }
   #cursor-info { order: 2; }
-  
   #math-output, #svg-stats { font-size: 0.85rem; line-height: 1.4; margin-top: 0.5rem; padding: 0.5rem; background-color: #f8f9fa; border-radius: 4px; max-height: 150px; overflow-y: auto; }
   #math-output strong { color: var(--details); }
   
   /* Capture Buttons */
   .capture-controls { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; z-index: 10; }
-  .capture-controls button { background-color: var(--button-secondary); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 0.9rem; font-weight: 300; cursor: pointer; transition: background-color 0.2s; line-height: 30px; padding: 0; }
-  .capture-controls button:hover { background-color: var(--button-secondary-hover); }
+  .capture-controls button {
+      background-color: var(--button-secondary); /* Default background */
+      color: white;
+      border: 1px solid transparent; /* Add border for consistency */
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      font-size: 0.9rem;
+      font-weight: 300;
+      cursor: pointer;
+      transition: background-color 0.2s, border-color 0.2s; /* Added border-color transition */
+      line-height: 30px; /* Adjust if needed */
+      padding: 0;
+      display: inline-flex; /* Helps center content */
+      align-items: center;
+      justify-content: center;
+  }
+  .capture-controls button:hover {
+      background-color: var(--button-secondary-hover);
+  }
+  /* *** ADDED: Style for captured state *** */
+  .capture-controls button.captured {
+      background-color: var(--success-green, #28a745); /* Use CSS var or fallback */
+      border-color: var(--success-green-border, #218838); /* Use CSS var or fallback */
+      color: white; /* Ensure text remains visible */
+  }
+  .capture-controls button.captured:hover {
+      background-color: var(--success-green-border, #218838); /* Darker green on hover */
+  }
+  
   
   /* Footer */
   footer { background-color: var(--footer-bg); border-top: 1px solid var(--border-color); flex-shrink: 0; padding: 0.5rem 1rem; text-align: center; font-size: 0.8rem; color: #666; }
   
-  /* Responsive adjustments (Keep existing ones) */
+  /* Responsive adjustments */
   @media (max-width: 768px) { /* ... */ }
   @media (max-width: 480px) { /* ... */ }
   

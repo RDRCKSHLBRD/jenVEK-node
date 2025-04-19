@@ -34,8 +34,16 @@ export function secureRandom() {
  * @returns {number} A random float within the specified range.
  */
 export function random(min, max) {
+  // Ensure min and max are numbers, provide defaults if not
+  min = typeof min === 'number' ? min : 0;
+  max = typeof max === 'number' ? max : 1;
+  // Ensure max is greater than min
+  if (max < min) {
+      [min, max] = [max, min]; // Swap them
+  }
   return secureRandom() * (max - min) + min;
 }
+
 
 /**
  * Generates a random integer within a specified range (inclusive).
@@ -45,8 +53,16 @@ export function random(min, max) {
  * @returns {number} A random integer within the specified range.
  */
 export function randomInt(min, max) {
-  return Math.floor(random(min, max + 1));
+  // Ensure min and max are integers, provide defaults if not
+  min = Math.ceil(typeof min === 'number' ? min : 0);
+  max = Math.floor(typeof max === 'number' ? max : 1);
+  // Ensure max is greater than or equal to min
+  if (max < min) {
+      [min, max] = [max, min]; // Swap them
+  }
+  return Math.floor(secureRandom() * (max - min + 1)) + min;
 }
+
 
 /**
  * Selects a random element from an array.
@@ -55,7 +71,7 @@ export function randomInt(min, max) {
  */
 export function randomChoice(array) {
   if (!array || !Array.isArray(array) || array.length === 0) {
-      console.warn("randomChoice called with invalid or empty array.");
+      // console.warn("randomChoice called with invalid or empty array."); // Can be spammy
       return null;
   }
   const index = Math.floor(secureRandom() * array.length);
@@ -105,12 +121,15 @@ export function fibonacci(n) {
 export function goldenRatioPoint(index, totalPoints, radius) {
   const goldenAngle = Math.PI * (3 - Math.sqrt(5));
   const angle = index * goldenAngle;
+  // Ensure totalPoints is at least 1 to avoid division by zero or sqrt of negative
+  totalPoints = Math.max(1, totalPoints);
   const distance = radius * Math.sqrt(index / totalPoints);
   return {
       x: Math.cos(angle) * distance,
       y: Math.sin(angle) * distance
   };
 }
+
 
 /**
  * Creates an SVG element with specified attributes and appends it to a parent if provided.
@@ -151,17 +170,20 @@ export function generateUniqueId(prefix = 'svg-elem') {
  * @returns {string} The formatted number string.
  */
 export function formatNumber(num) {
-    if (typeof num !== 'number') {
-        console.warn(`formatNumber expected a number, received: ${typeof num}`);
-        return String(num);
+    if (typeof num !== 'number' || isNaN(num)) { // Added NaN check
+        // console.warn(`formatNumber expected a valid number, received: ${num}`);
+        return String(num); // Return string representation even if not a number
     }
   try {
-      return new Intl.NumberFormat().format(num);
+      // Use options for better formatting control if needed later
+      return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(num);
   } catch (e) {
       console.warn("Intl.NumberFormat failed, using basic regex fallback for formatNumber.", e);
+      // Basic fallback, might not handle decimals well
       return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
 }
+
 
 /**
  * Gets a value between 0 and 1 representing the fraction of the current day that has passed.
@@ -177,7 +199,7 @@ export function getTimeSeedValue() {
 
 
 // ========================================================
-// NEW Curve Smoothing Utility Functions
+// Curve Smoothing Utility Functions
 // ========================================================
 
 /**
@@ -190,9 +212,18 @@ export function getTimeSeedValue() {
  * @returns {string} The SVG path 'd' attribute string.
  */
 export function pointsToPathString(points, smoothingType = 'straight', options = {}, closePath = false) {
-    if (!points || points.length < 2) {
+    if (!points || !Array.isArray(points) || points.length < 2) { // Added Array.isArray check
+        console.warn("pointsToPathString: Invalid or insufficient points array provided.");
         return ''; // Need at least two points for a path
     }
+
+    // Ensure all points are valid objects with numbers
+    points = points.filter(p => p && typeof p.x === 'number' && typeof p.y === 'number' && !isNaN(p.x) && !isNaN(p.y));
+    if (points.length < 2) {
+        console.warn("pointsToPathString: Not enough valid points after filtering.");
+        return '';
+    }
+
 
     let d = `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
 
@@ -263,4 +294,22 @@ function pointsToCubicBezierString(points, tension = 0.5) {
         pathSegment += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
     }
     return pathSegment;
+}
+
+// *** ADDED simpleStringHash function and EXPORTED it ***
+/**
+ * Simple hash function to convert a string seed into a number.
+ * Used when a non-numeric seed override is provided.
+ * @param {string} str - The input seed string.
+ * @returns {number} A numeric hash value.
+ */
+export function simpleStringHash(str) {
+    let hash = 0;
+    if (!str || str.length === 0) return hash;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return Math.abs(hash); // Ensure positive seed
 }

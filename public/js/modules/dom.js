@@ -49,6 +49,10 @@ export function cacheDOMElements() {
     dom.lineSpacingInvert = document.getElementById('line-spacing-invert');
     dom.lineWaveAmplitude = document.getElementById('line-wave-amplitude');
     dom.lineWaveFrequency = document.getElementById('line-wave-frequency');
+    // *** ADDED: Explicitly cache the lineArcAmount input ***
+    dom.lineArcAmount = document.getElementById('line-arc-amount');
+
+
     dom.strokeWeight = document.getElementById('stroke-weight');
     dom.scale = document.getElementById('scale');
     // dom.opacity = document.getElementById('opacity'); // Assuming primary is in right sidebar
@@ -117,11 +121,14 @@ export function cacheDOMElements() {
             // Convert hyphenated ID to camelCase for the display key
             const displayKey = input.id.replace(/-([a-z])/g, g => g[1].toUpperCase()) + 'Display';
             dom[displayKey] = display; // e.g., dom.splineTensionDisplay, dom.lissajousADisplay etc.
-            display.textContent = input.value;
+            // Initialize display text content
+            if (input.value !== undefined) {
+                 display.textContent = input.value;
+            }
             // Add listener to update display when range value changes
             input.addEventListener('input', () => {
                  // Check if the corresponding display element exists in dom before updating
-                 if (dom[displayKey]) {
+                 if (dom[displayKey] && input.value !== undefined) {
                      dom[displayKey].textContent = input.value;
                  }
             });
@@ -129,11 +136,23 @@ export function cacheDOMElements() {
             // Only warn if the input itself was successfully cached
             // Check if the input element itself has been cached in the dom object
             const inputCached = Object.values(dom).includes(input);
-            if (inputCached) {
+            // Also check if the specific ID was explicitly cached (like lineArcAmount)
+            const explicitlyCached = dom[input.id.replace(/-([a-z])/g, g => g[1].toUpperCase())] === input;
+
+            // Don't warn if a display span is missing for an explicitly cached input
+            // (like lineArcAmount, which might not need one if the value isn't crucial to see constantly)
+            if (inputCached && !explicitlyCached) {
                  console.warn(`Value display span not found for range input: #${input.id}`);
             }
         }
     });
+
+     // *** Manually update display for lineArcAmount if its display span exists ***
+     // Check if both the input and its specific display span were found
+     if (dom.lineArcAmount && dom.lineArcAmountDisplay && dom.lineArcAmount.value !== undefined) {
+         dom.lineArcAmountDisplay.textContent = dom.lineArcAmount.value;
+     }
+
 
     console.log("DOM elements cached:", Object.keys(dom).length);
 }
