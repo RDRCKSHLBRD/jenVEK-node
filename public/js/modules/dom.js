@@ -15,33 +15,47 @@ export function cacheDOMElements() {
 
     // --- Core SVG Elements ---
     dom.svg = document.getElementById('svg-canvas');
-    if (!dom.svg) console.error("SVG Canvas element not found!");
-    let defs = dom.svg?.querySelector('defs');
-    if (dom.svg && !defs) {
-        console.log("Defs not found, creating...");
-        defs = document.createElementNS("http://www.w3.org/2000/svg", 'defs');
-        dom.svg.appendChild(defs);
+    if (!dom.svg) { console.error("SVG Canvas element not found!"); }
+    else { // Only try to find defs if svg exists
+        let defs = dom.svg.querySelector('defs');
+        if (!defs) {
+            console.log("Defs not found, creating...");
+            // Use SVG_NS constant if needed and imported, otherwise use string directly
+            defs = document.createElementNS("http://www.w3.org/2000/svg", 'defs');
+            dom.svg.appendChild(defs);
+        }
+        dom.defs = defs;
+        if (!dom.defs) { console.error("SVG Defs element could not be found or created!"); }
     }
-    dom.defs = defs;
-    if (!dom.defs) console.error("SVG Defs element could not be found or created!");
+
 
     // --- Generator Controls (Left Sidebar) ---
     dom.patternType = document.getElementById('pattern-type');
     dom.layerCount = document.getElementById('layer-count');
     dom.complexity = document.getElementById('complexity');
     dom.density = document.getElementById('density');
+    dom.lineSpacing = document.getElementById('line-spacing');
+    dom.lineWaveAmplitude = document.getElementById('line-wave-amplitude');
+    dom.lineWaveFrequency = document.getElementById('line-wave-frequency');
     dom.repetition = document.getElementById('repetition');
     dom.maxRecursion = document.getElementById('max-recursion');
     dom.strokeWeight = document.getElementById('stroke-weight');
     dom.scale = document.getElementById('scale');
     dom.opacity = document.getElementById('opacity'); // Moved opacity here
+    dom.roseNParam = document.getElementById('rose-n-param');
+    // *** Cache New Controls ***
+    dom.offsetX = document.getElementById('offset-x');
+    dom.offsetY = document.getElementById('offset-y');
+    dom.globalAngle = document.getElementById('global-angle');
+    dom.seedOverride = document.getElementById('seed-override');
+    dom.curveSteps = document.getElementById('curve-steps'); // Cache the curve steps input
+    // *** End Cache New Controls ***
     dom.viewportPreset = document.getElementById('viewport-preset');
     dom.customWidth = document.getElementById('custom-width');
     dom.customHeight = document.getElementById('custom-height');
     dom.useCursor = document.getElementById('use-cursor');
     dom.useTime = document.getElementById('use-time');
-    // *** Add Rose Param Slider ***
-    dom.roseNParam = document.getElementById('rose-n-param');
+
 
     // --- Color & Style Controls (Right Sidebar) ---
     dom.colorCategory = document.getElementById('color-category');
@@ -50,7 +64,6 @@ export function cacheDOMElements() {
     dom.bgColor = document.getElementById('bg-color');
     dom.strokeColor = document.getElementById('stroke-color');
     dom.fillType = document.getElementById('fill-type');
-    // dom.opacity = document.getElementById('opacity'); // Already cached above
     dom.animation = document.getElementById('animation');
     dom.animationType = document.getElementById('animation-type');
 
@@ -78,18 +91,38 @@ export function cacheDOMElements() {
     dom.svgStats = document.getElementById('svg-stats');
 
     // --- Add value displays for ranges ---
+    // Ensure this runs *after* all range inputs are potentially cached above
     document.querySelectorAll('input[type="range"]').forEach(input => {
         const display = input.parentElement?.querySelector('.value-display');
         if (display) {
-            dom[input.id + 'Display'] = display; // e.g., dom.complexityDisplay
+            // Use input.id which should be unique (e.g., 'complexity', 'global-angle')
+            const displayKey = input.id + 'Display';
+            dom[displayKey] = display; // e.g., dom.complexityDisplay, dom.globalAngleDisplay
             display.textContent = input.value;
+            // Add listener to update display when range value changes
             input.addEventListener('input', () => {
-                 display.textContent = input.value;
+                 // Check if the corresponding display element exists in dom before updating
+                 if (dom[displayKey]) {
+                     dom[displayKey].textContent = input.value;
+                 }
             });
         } else {
-            console.warn(`Value display span not found for range input: #${input.id}`);
+            // Only warn if the input itself was successfully cached
+            if (dom[input.id]) {
+                 console.warn(`Value display span not found for range input: #${input.id}`);
+            }
         }
     });
 
+    // Check for any missing elements after trying to cache all
+    const requiredIDs = [ /* List all expected IDs here if needed for strict checking */ ];
+    requiredIDs.forEach(id => {
+        if (!dom[id]) {
+            console.error(`Post-cache check: DOM element #${id} is missing!`);
+        }
+    });
+
+
     console.log("DOM elements cached:", Object.keys(dom).length);
 }
+

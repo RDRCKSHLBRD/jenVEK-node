@@ -27,6 +27,7 @@
                 <div class="control-group">
                     <label>Pattern Type</label>
                     <select id="pattern-type">
+                        <option value="lines">Lines</option>
                         <option value="random">Random Shapes</option>
                         <option value="recursive">Recursive Shapes</option>
                         <option value="grid">Grid Pattern</option>
@@ -43,9 +44,31 @@
                         </select>
                 </div>
                 <div class="control-group">
-                    <label>Layer Count (1-5)</label> <input type="range" id="layer-count" min="1" max="10" value="1"> <span class="value-display">1</span>
+                    <label>Layer Count (1-25)</label> <input type="range" id="layer-count" min="1" max="25" value="1"> <span class="value-display">1</span>
                 </div>
-                <div class="control-group">
+
+                <hr> <div class="control-group">
+                    <label for="offset-x">Offset X</label>
+                    <input type="number" id="offset-x" step="1" value="0">
+                 </div>
+                 <div class="control-group">
+                    <label for="offset-y">Offset Y</label>
+                    <input type="number" id="offset-y" step="1" value="0">
+                 </div>
+                 <div class="control-group">
+                    <label for="global-angle">Global Angle (°)</label>
+                    <input type="range" id="global-angle" min="0" max="360" step="1" value="0">
+                    <span class="value-display">0</span>
+                 </div>
+                 <div class="control-group">
+                    <label for="seed-override">Seed Override (blank=random)</label>
+                    <input type="text" id="seed-override" placeholder="Enter seed value...">
+                 </div>
+                 <div class="control-group checkbox-group">
+                    <label><input type="checkbox" id="use-cursor"> Use Cursor Seed</label>
+                    <label><input type="checkbox" id="use-time"> Use Time Seed</label>
+                </div>
+                 <hr> <div class="control-group">
                     <label>Complexity</label>
                     <input type="range" id="complexity" min="1" max="20" value="5"> <span class="value-display">5</span>
                 </div>
@@ -53,6 +76,23 @@
                     <label>Density</label>
                     <input type="range" id="density" min="1" max="100" value="70"> <span class="value-display">70</span>
                 </div>
+
+                <div class="control-group">
+                    <label>Line Spacing</label>
+                    <input type="range" id="line-spacing" min="1" max="100" step="1" value="20">
+                    <span class="value-display">20</span>
+                </div>  
+                <div class="control-group">
+                    <label>Wave Amplitude</label>
+                    <input type="range" id="line-wave-amplitude" min="0" max="50" step="1" value="5">
+                    <span class="value-display">5</span>
+                </div>
+                 <div class="control-group">
+                    <label>Wave Frequency</label>
+                    <input type="range" id="line-wave-frequency" min="0.1" max="10" step="0.1" value="1">
+                    <span class="value-display">1</span>
+                </div>
+
                  <div class="control-group">
                     <label>Repetition / Tiling</label>
                     <input type="range" id="repetition" min="1" max="20" value="1"> <span class="value-display">1</span>
@@ -61,21 +101,18 @@
                     <label>Max Recursion (Depth)</label>
                     <input type="range" id="max-recursion" min="1" max="10" value="4"> <span class="value-display">4</span>
                 </div>
-
                 <div class="control-group">
                     <label>Rose Petal Param (n)</label>
                     <input type="range" id="rose-n-param" min="1" max="50" step="1" value="3">
                     <span class="value-display">3</span>
                 </div>
-
                 <div class="control-group">
                     <label for="curve-steps">Curve/Sequence Steps (0=Auto)</label>
                     <input type="number" id="curve-steps" min="0" max="5000" step="10" value="0">
                     </div>
-
                 <div class="control-group">
                     <label>Stroke Weight</label>
-                    <input type="range" id="stroke-weight" min="0" max="20" step="0.25" value="1"> <span class="value-display">1</span>
+                    <input type="range" id="stroke-weight" min="0" max="50" step="0.1" value="1"> <span class="value-display">1</span>
                 </div>
                  <div class="control-group">
                     <label>Base Scale</label>
