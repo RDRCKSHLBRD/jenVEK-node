@@ -44,11 +44,11 @@ export function cacheDOMElements() {
     dom.maxRecursion = document.getElementById('max-recursion');
     dom.roseNParam = document.getElementById('rose-n-param');
     dom.curveSteps = document.getElementById('curve-steps');
-    // *** Cache Line Spacing and Wave Controls ***
     dom.lineSpacing = document.getElementById('line-spacing');
+    dom.lineSpacingRatio = document.getElementById('line-spacing-ratio');
+    dom.lineSpacingInvert = document.getElementById('line-spacing-invert');
     dom.lineWaveAmplitude = document.getElementById('line-wave-amplitude');
     dom.lineWaveFrequency = document.getElementById('line-wave-frequency');
-    // *** End Cache New Controls ***
     dom.strokeWeight = document.getElementById('stroke-weight');
     dom.scale = document.getElementById('scale');
     dom.opacity = document.getElementById('opacity');

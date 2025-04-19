@@ -40,7 +40,7 @@ function getOptions() {
         'patternType', 'layerCount', 'complexity', 'density', 'repetition',
         'maxRecursion', 'roseNParam', 'strokeWeight', 'scale', 'opacity',
         'curveSteps', 'offsetX', 'offsetY', 'globalAngle', 'seedOverride', 'lineSpacing',
-        'lineWaveAmplitude','lineWaveFrequency',
+        'lineWaveAmplitude','lineWaveFrequency','lineSpacingRatio', 'lineSpacingInvert',
         'viewportPreset', 'customWidth', 'customHeight', 'useCursor', 'useTime',
         'colorCategory', 'colorPalette', 'bgColor', 'strokeColor', 'fillType',
         'animation', 'animationType'
@@ -88,6 +88,8 @@ function getOptions() {
             lineSpacing: parseInt(dom.lineSpacing.value,10) || 20,
             lineWaveAmplitude: parseFloat(dom.lineWaveAmplitude.value) || 0,
             lineWaveFrequency: parseFloat(dom.lineWaveFrequency.value) || 1,
+            lineSpacingRatio: parseFloat(dom.lineSpacingRatio.value) || 1.0, // Default ratio 1
+            lineSpacingInvert: dom.lineSpacingInvert.checked, // Boolean
         };
         return state.currentOptions;
     } catch (error) {
