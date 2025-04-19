@@ -2,7 +2,7 @@
 
 // ----- MODULE IMPORTS -----
 // Import necessary utilities
-import { createSVGElement, random, randomInt, randomChoice } from '../utils.js';
+import { createSVGElement, random, randomChoice, pointsToPathString } from '../utils.js'; // Added pointsToPathString
 // Import state if needed
 // import { state } from '../state.js';
 // Import color utilities if needed
@@ -10,15 +10,20 @@ import { createSVGElement, random, randomInt, randomChoice } from '../utils.js';
 
 
 /**
- * Generates patterns based on Lissajous curves.
+ * Generates patterns based on Lissajous curves using parameters from options.
+ * Applies curve smoothing based on options.
  * @param {SVGElement} parent - The parent SVG group element (<g>).
- * @param {object} options - Generation options.
+ * @param {object} options - Generation options, including lissajousA, lissajousB, lissajousDelta, curveSmoothing, splineTension.
  * @param {string[]} palette - Color palette.
  * @returns {object} Generation results.
  */
 export function generateLissajousPattern(parent, options, palette) {
-    // Destructure options
-    const { viewportWidth: width, viewportHeight: height, complexity, density, repetition, scale, strokeWeight, opacity, strokeColor } = options;
+    // Destructure options, including the specific Lissajous and smoothing parameters
+    const {
+        viewportWidth: width, viewportHeight: height, complexity, density, repetition, scale, strokeWeight, opacity, strokeColor,
+        lissajousA, lissajousB, lissajousDelta, // Lissajous params
+        curveSmoothing, splineTension // Smoothing params
+    } = options;
     let elementCount = 0;
 
     // Number of curves based on complexity and repetition
@@ -32,41 +37,65 @@ export function generateLissajousPattern(parent, options, palette) {
     const radiusX = width * 0.4 * scale; // Max horizontal extent
     const radiusY = height * 0.4 * scale; // Max vertical extent
 
-    console.log(`Generating ${numCurves} Lissajous curves...`);
+    // Use the parameters directly from options
+    const a = lissajousA || 1;
+    const b = lissajousB || 1;
+    const delta = lissajousDelta || 0;
+
+    console.log(`Generating ${numCurves} Lissajous curves (a=${a}, b=${b}, delta=${(delta/Math.PI).toFixed(3)}π, smoothing: ${curveSmoothing})...`); // Updated log
 
     // Generate each Lissajous curve
     for (let i = 0; i < numCurves; i++) {
-         // Frequencies (a, b) determine the shape (uses imported randomInt)
-         const a = randomInt(1, Math.floor(complexity / 2) + 1);
-         const b = randomInt(1, Math.floor(complexity / 2) + 1);
-         // Phase difference (delta) also affects the shape (uses imported randomChoice)
-         const delta = Math.PI / randomChoice([1, 2, 3, 4, 6, 8]);
+        // *** Change: Store points as objects {x, y} ***
+        const pathPoints = []; // Array to store point objects
 
-        const pathPoints = []; // Array to store points for the path
+        // Add slight random offsets to center or radius for variation if desired
+        const currentCenterX = centerX + random(-width*0.02, width*0.02);
+        const currentCenterY = centerY + random(-height*0.02, height*0.02);
+        const currentRadiusX = radiusX * random(0.9, 1.1);
+        const currentRadiusY = radiusY * random(0.9, 1.1);
+
 
         // Calculate points along the curve using parametric equations
         for (let j = 0; j <= steps; j++) {
-            // Parameter t ranges from 0 to 2*PI (scaled by repetition)
-            const t = (j / steps) * Math.PI * 2 * Math.max(1, repetition / 2);
+            // Parameter t ranges from 0 to 2*PI (scaled by repetition slightly for potentially longer trails)
+            const t = (j / steps) * Math.PI * 2 * Math.max(1, repetition / 1.5); // Adjusted repetition scaling
             // Lissajous equations:
-            const x = centerX + radiusX * Math.sin(a * t + delta);
-            const y = centerY + radiusY * Math.sin(b * t);
-            pathPoints.push(`${x.toFixed(2)},${y.toFixed(2)}`); // Add point (with fixed precision)
+            const x = currentCenterX + currentRadiusX * Math.sin(a * t + delta);
+            const y = currentCenterY + currentRadiusY * Math.sin(b * t);
+            // *** Change: Push point object ***
+            pathPoints.push({ x: x, y: y });
         }
 
-         // Draw the path if enough points were generated (uses imported createSVGElement)
+         // Draw the path if enough points were generated
          if (pathPoints.length > 1) {
-             createSVGElement('path', {
-                 d: `M ${pathPoints[0]} L ${pathPoints.slice(1).join(' L ')}`,
-                 fill: 'none', // Curves are not filled
-                 // Uses imported randomChoice and random
-                 stroke: randomChoice(palette) || strokeColor,
-                 'stroke-width': Math.max(0.5, strokeWeight * random(0.8, 1.2)),
-                 opacity: opacity * random(0.7, 1)
-             }, parent);
-             elementCount++;
+             // *** Change: Use pointsToPathString utility for drawing ***
+             const d = pointsToPathString(pathPoints, curveSmoothing, { splineTension }, true); // Pass points, smoothing options, and closePath=true
+
+             // Only draw if path string is valid
+             if (d) {
+                 createSVGElement('path', {
+                     d: d, // Use the generated path string
+                     fill: 'none', // Curves are not filled
+                     stroke: randomChoice(palette) || strokeColor,
+                     'stroke-width': Math.max(0.5, strokeWeight * random(0.8, 1.2)),
+                     opacity: opacity * random(0.7, 1)
+                 }, parent);
+                 elementCount++;
+             } else {
+                 console.warn("pointsToPathString returned empty for Lissajous curve, skipping draw.");
+             }
          }
     }
-     // Return results
-     return { elementCount, curves: numCurves, stepsPerCurve: steps };
+     // Return results including the parameters used
+     return {
+        elementCount,
+        curves: numCurves,
+        stepsPerCurve: steps,
+        freqA: a,
+        freqB: b,
+        phaseDelta: delta,
+        smoothing: curveSmoothing // Include smoothing type in results
+     };
 }
+
