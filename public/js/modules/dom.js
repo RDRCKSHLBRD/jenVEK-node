@@ -32,29 +32,29 @@ export function cacheDOMElements() {
     // --- Generator Controls (Left Sidebar) ---
     dom.patternType = document.getElementById('pattern-type');
     dom.layerCount = document.getElementById('layer-count');
-    dom.complexity = document.getElementById('complexity');
-    dom.density = document.getElementById('density');
-    dom.lineSpacing = document.getElementById('line-spacing');
-    dom.lineWaveAmplitude = document.getElementById('line-wave-amplitude');
-    dom.lineWaveFrequency = document.getElementById('line-wave-frequency');
-    dom.repetition = document.getElementById('repetition');
-    dom.maxRecursion = document.getElementById('max-recursion');
-    dom.strokeWeight = document.getElementById('stroke-weight');
-    dom.scale = document.getElementById('scale');
-    dom.opacity = document.getElementById('opacity'); // Moved opacity here
-    dom.roseNParam = document.getElementById('rose-n-param');
-    // *** Cache New Controls ***
     dom.offsetX = document.getElementById('offset-x');
     dom.offsetY = document.getElementById('offset-y');
     dom.globalAngle = document.getElementById('global-angle');
     dom.seedOverride = document.getElementById('seed-override');
-    dom.curveSteps = document.getElementById('curve-steps'); // Cache the curve steps input
+    dom.useCursor = document.getElementById('use-cursor');
+    dom.useTime = document.getElementById('use-time');
+    dom.complexity = document.getElementById('complexity');
+    dom.density = document.getElementById('density');
+    dom.repetition = document.getElementById('repetition');
+    dom.maxRecursion = document.getElementById('max-recursion');
+    dom.roseNParam = document.getElementById('rose-n-param');
+    dom.curveSteps = document.getElementById('curve-steps');
+    // *** Cache Line Spacing and Wave Controls ***
+    dom.lineSpacing = document.getElementById('line-spacing');
+    dom.lineWaveAmplitude = document.getElementById('line-wave-amplitude');
+    dom.lineWaveFrequency = document.getElementById('line-wave-frequency');
     // *** End Cache New Controls ***
+    dom.strokeWeight = document.getElementById('stroke-weight');
+    dom.scale = document.getElementById('scale');
+    dom.opacity = document.getElementById('opacity');
     dom.viewportPreset = document.getElementById('viewport-preset');
     dom.customWidth = document.getElementById('custom-width');
     dom.customHeight = document.getElementById('custom-height');
-    dom.useCursor = document.getElementById('use-cursor');
-    dom.useTime = document.getElementById('use-time');
 
 
     // --- Color & Style Controls (Right Sidebar) ---
@@ -95,9 +95,9 @@ export function cacheDOMElements() {
     document.querySelectorAll('input[type="range"]').forEach(input => {
         const display = input.parentElement?.querySelector('.value-display');
         if (display) {
-            // Use input.id which should be unique (e.g., 'complexity', 'global-angle')
+            // Use input.id which should be unique
             const displayKey = input.id + 'Display';
-            dom[displayKey] = display; // e.g., dom.complexityDisplay, dom.globalAngleDisplay
+            dom[displayKey] = display; // e.g., dom.lineSpacingDisplay, dom.lineWaveAmplitudeDisplay etc.
             display.textContent = input.value;
             // Add listener to update display when range value changes
             input.addEventListener('input', () => {
@@ -114,13 +114,13 @@ export function cacheDOMElements() {
         }
     });
 
-    // Check for any missing elements after trying to cache all
-    const requiredIDs = [ /* List all expected IDs here if needed for strict checking */ ];
-    requiredIDs.forEach(id => {
-        if (!dom[id]) {
-            console.error(`Post-cache check: DOM element #${id} is missing!`);
-        }
-    });
+    // Check for any missing elements after trying to cache all (Optional strict check)
+    // const requiredIDs = [ /* List all expected IDs here */ ];
+    // requiredIDs.forEach(id => {
+    //     if (!dom[id]) {
+    //         console.error(`Post-cache check: DOM element #${id} is missing!`);
+    //     }
+    // });
 
 
     console.log("DOM elements cached:", Object.keys(dom).length);

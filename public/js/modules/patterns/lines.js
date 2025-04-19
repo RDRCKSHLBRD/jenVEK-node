@@ -1,86 +1,113 @@
-// lines.js 
-
-
 // public/js/modules/patterns/lines.js
 
 // ----- MODULE IMPORTS -----
 // Import necessary utilities
 import { createSVGElement, randomChoice } from '../utils.js';
-// Import state if needed
-// import { state } from '../state.js';
-// Import color utilities if needed
-// import { getRandomFill } from '../colorUtils.js';
-
+// Import random if needed for phase variation (optional)
+// import { random } from '../utils.js';
 
 /**
- * Generates a pattern of parallel lines.
- * Lines are initially vertical but rotated by the globalAngle option.
- * Spacing is controlled by the lineSpacing option.
- * @param {SVGElement} parent - The parent SVG group element (<g>) passed from generator.js.
+ * Generates a pattern of parallel wavy lines.
+ * Base orientation/spacing set by lineSpacing, then rotated by globalAngle.
+ * Wave shape controlled by lineWaveAmplitude and lineWaveFrequency.
+ * @param {SVGElement} parent - The parent SVG group element (<g>).
  * @param {object} options - Generation options object.
  * @param {string[]} palette - The array of hex color strings for the current palette.
  * @returns {object} An object containing generation results (e.g., elementCount).
  */
 export function generateLinesPattern(parent, options, palette) {
-    console.log("Generating Lines pattern...");
+    console.log("Generating Wavy Lines pattern...");
     // Destructure needed options for clarity
     const {
         viewportWidth: width, viewportHeight: height, lineSpacing, globalAngle,
-        strokeColor, strokeWeight, opacity
+        strokeColor, strokeWeight, opacity,
+        lineWaveAmplitude, lineWaveFrequency // Use the wave controls
     } = options;
     let elementCount = 0;
 
-    // Ensure lineSpacing is at least 1 to avoid infinite loops/errors
+    // Ensure lineSpacing is at least 1
     const spacing = Math.max(1, lineSpacing);
+    // Ensure amplitude and frequency have values (frequency shouldn't be 0)
+    const amplitude = lineWaveAmplitude || 0; // Default amplitude to 0 if not provided
+    const frequency = lineWaveFrequency || 1; // Default frequency to 1 if not provided
 
-    // Calculate a distance slightly larger than the viewport diagonal
-    // to ensure lines cover the area even after rotation.
+    // Calculate draw area slightly larger than viewport diagonal
     const diagonal = Math.sqrt(width * width + height * height);
-    // Draw across an area slightly larger than the diagonal to ensure coverage
     const drawWidth = diagonal * 1.2;
-
-    // Determine the number of lines needed based on spacing
-    const numLines = Math.ceil(drawWidth / spacing);
+    const numLines = Math.max(1, Math.ceil(drawWidth / spacing));
 
     // Create a group for the lines. Apply rotation to this group.
-    // Rotation origin is the center of the viewport (width/2, height/2).
     const lineGroup = createSVGElement('g', {
-        // Apply the global rotation transform to the entire group of lines
         transform: `rotate(${globalAngle} ${width / 2} ${height / 2})`,
-        // Apply default stroke styles to the group (can be overridden per line)
+        // Set fill to none for the group, paths will only have stroke
+        fill: 'none',
+        // Apply default stroke styles (can be overridden per line)
         stroke: strokeColor,
         'stroke-width': strokeWeight,
         opacity: opacity
-    }, parent); // Append this group to the main layer group passed as 'parent'
+    }, parent);
 
-    // Calculate coordinates for drawing vertical lines centered around the viewport middle
-    const startX = width / 2 - drawWidth / 2; // Start drawing from left edge of the expanded draw area
-    // Make lines longer than viewport height to ensure coverage after rotation
+    // Define vertical extent for lines
     const lineLength = diagonal * 1.2;
-    const startY = height / 2 - lineLength / 2; // Top endpoint (extends above viewport)
-    const endY = height / 2 + lineLength / 2; // Bottom endpoint (extends below viewport)
+    const startY = height / 2 - lineLength / 2;
+    const endY = height / 2 + lineLength / 2;
+    // Number of segments used to approximate the wavy line path
+    const pathSteps = 50; // Increase for smoother curves, decrease for performance
 
-    // Loop to create each line
+    // Calculate starting X position for the block of lines
+    const startX = width / 2 - drawWidth / 2;
+
+    // Loop to create each wavy line/path
     for (let i = 0; i < numLines; i++) {
-        // Calculate the x-position for the current vertical line
-        const x = startX + i * spacing;
+        // Base horizontal position for this line
+        const baseX = startX + i * spacing;
+        const pathPoints = []; // Array to hold points for this path's 'd' attribute
 
-        // Create the line element (uses imported createSVGElement)
-        createSVGElement('line', {
-            x1: x.toFixed(2),
-            y1: startY.toFixed(2),
-            x2: x.toFixed(2),
-            y2: endY.toFixed(2),
-            // Optionally override stroke color per line using imported randomChoice
-            stroke: randomChoice(palette) || strokeColor
-            // Optional: override other properties like stroke-width per line if desired
-            // 'stroke-width': strokeWeight * random(0.5, 1.5) // Requires importing 'random'
-        }, lineGroup); // Add the line to the rotated group
+        // Optional: Add a phase shift per line for more variation
+        // This makes adjacent lines wiggle out of sync
+        const phaseShift = i * 0.5; // Adjust multiplier for different effects
 
-        elementCount++;
+        // Calculate points along the wavy path
+        for (let j = 0; j <= pathSteps; j++) {
+            // Calculate the Y position for this step along the line's length
+            const currentY = startY + (j / pathSteps) * lineLength;
+
+            // Calculate the horizontal offset using a sine wave
+            // (currentY / height) normalizes y position relative to viewport height
+            // frequency controls how many waves appear vertically
+            // amplitude controls the maximum horizontal deviation
+            const xOffset = amplitude * Math.sin(
+                (currentY / height) * Math.PI * 2 * frequency + phaseShift
+            );
+
+            // Final point coordinates for the path segment
+            const pointX = baseX + xOffset;
+            const pointY = currentY;
+            pathPoints.push(`${pointX.toFixed(2)},${pointY.toFixed(2)}`);
+        }
+
+        // Create the path element if points were generated
+        if (pathPoints.length > 1) {
+            // Construct the 'd' attribute: M = move to first point, L = line to subsequent points
+            const d = `M ${pathPoints[0]} L ${pathPoints.slice(1).join(' L ')}`;
+
+            // Create the <path> element instead of <line>
+            createSVGElement('path', {
+                d: d,
+                stroke: randomChoice(palette) || strokeColor // Vary color per line
+                // Inherits stroke-width and opacity from the group
+            }, lineGroup); // Add the path to the rotated group
+            elementCount++;
+        }
     }
 
-    console.log(`Generated ${elementCount} lines with spacing ${spacing}.`);
+    console.log(`Generated ${elementCount} wavy lines.`);
     // Return results including parameters used
-    return { elementCount, pattern: 'Lines', spacing: spacing };
+    return {
+        elementCount,
+        pattern: 'Wavy Lines',
+        spacing: spacing,
+        amplitude: amplitude,
+        frequency: frequency
+    };
 }

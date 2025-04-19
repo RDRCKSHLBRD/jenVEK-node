@@ -39,7 +39,7 @@ function getOptions() {
     const requiredDOMElements = [
         'patternType', 'layerCount', 'complexity', 'density', 'repetition',
         'maxRecursion', 'roseNParam', 'strokeWeight', 'scale', 'opacity',
-        'curveSteps', 'offsetX', 'offsetY', 'globalAngle', 'seedOverride', 'linesSpacing',
+        'curveSteps', 'offsetX', 'offsetY', 'globalAngle', 'seedOverride', 'lineSpacing',
         'lineWaveAmplitude','lineWaveFrequency',
         'viewportPreset', 'customWidth', 'customHeight', 'useCursor', 'useTime',
         'colorCategory', 'colorPalette', 'bgColor', 'strokeColor', 'fillType',
