@@ -18,14 +18,10 @@ const randomSource = window.crypto || window.msCrypto;
  */
 export function secureRandom() {
   if (randomSource && randomSource.getRandomValues) {
-      // Create a buffer to hold one 32-bit unsigned integer
       const buffer = new Uint32Array(1);
-      // Fill the buffer with random values
       randomSource.getRandomValues(buffer);
-      // Convert the integer to a float between 0 and 1
-      return buffer[0] / 0xFFFFFFFF; // 0xFFFFFFFF is the maximum value for a Uint32
+      return buffer[0] / 0xFFFFFFFF;
   }
-  // Fallback to the less secure Math.random() if crypto is not available
   console.warn("Using fallback Math.random() as crypto API is unavailable.");
   return Math.random();
 }
@@ -49,7 +45,6 @@ export function random(min, max) {
  * @returns {number} A random integer within the specified range.
  */
 export function randomInt(min, max) {
-  // +1 makes the maximum value inclusive
   return Math.floor(random(min, max + 1));
 }
 
@@ -59,12 +54,10 @@ export function randomInt(min, max) {
  * @returns {any | null} A random element from the array, or null if the array is empty or invalid.
  */
 export function randomChoice(array) {
-  // Basic validation for the input array
   if (!array || !Array.isArray(array) || array.length === 0) {
       console.warn("randomChoice called with invalid or empty array.");
       return null;
   }
-  // Calculate a random index within the array bounds
   const index = Math.floor(secureRandom() * array.length);
   return array[index];
 }
@@ -75,23 +68,15 @@ export function randomChoice(array) {
  * @returns {boolean} True if the number is prime, false otherwise.
  */
 export function isPrime(num) {
-  // Ensure the number is an integer and handle base cases
   num = Math.abs(Math.floor(num));
-  if (num <= 1) return false; // 1 and numbers less than 1 are not prime
-  if (num <= 3) return true;  // 2 and 3 are prime
-
-  // Eliminate multiples of 2 and 3 quickly
+  if (num <= 1) return false;
+  if (num <= 3) return true;
   if (num % 2 === 0 || num % 3 === 0) return false;
-
-  // Check for factors from 5 upwards, stepping by 6 (optimisation)
-  // We only need to check up to the square root of num
   let i = 5;
   while (i * i <= num) {
-      // Check i and i + 2 (potential prime factors)
       if (num % i === 0 || num % (i + 2) === 0) return false;
-      i += 6; // Step by 6 covers all potential prime factors (5, 7, 11, 13, ...)
+      i += 6;
   }
-  // If no factors were found, the number is prime
   return true;
 }
 
@@ -101,17 +86,13 @@ export function isPrime(num) {
  * @returns {number} The nth Fibonacci number.
  */
 export function fibonacci(n) {
-  // Ensure n is a non-negative integer
   n = Math.max(0, Math.floor(n));
-  if (n <= 1) return n; // F(0) = 0, F(1) = 1
-
-  // Iterative calculation
+  if (n <= 1) return n;
   let a = 0, b = 1;
   for (let i = 2; i <= n; i++) {
-      // Use array destructuring for simultaneous assignment
       [a, b] = [b, a + b];
   }
-  return b; // b holds the nth Fibonacci number
+  return b;
 }
 
 /**
@@ -122,13 +103,9 @@ export function fibonacci(n) {
  * @returns {{x: number, y: number}} The x and y coordinates of the point.
  */
 export function goldenRatioPoint(index, totalPoints, radius) {
-  // Golden angle in radians (approximately 137.5 degrees)
   const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-  // Calculate the angle for this point
   const angle = index * goldenAngle;
-  // Calculate the distance from the center, using sqrt for even distribution
   const distance = radius * Math.sqrt(index / totalPoints);
-  // Convert polar coordinates (distance, angle) to Cartesian coordinates (x, y)
   return {
       x: Math.cos(angle) * distance,
       y: Math.sin(angle) * distance
@@ -144,25 +121,17 @@ export function goldenRatioPoint(index, totalPoints, radius) {
  * @returns {SVGElement} The created SVG element.
  */
 export function createSVGElement(tag, attrs = {}, parent = null) {
-  // Create the element in the SVG namespace
   const elem = document.createElementNS(SVG_NS, tag);
-
-  // Set attributes from the attrs object
   for (const [key, value] of Object.entries(attrs)) {
-      // Ensure value is not null or undefined before setting the attribute
-      // Allows setting attributes like stroke-width="0"
       if (value !== null && value !== undefined) {
            elem.setAttribute(key, value);
       }
   }
-
-  // Append the element to the parent if a parent is provided
-  if (parent && parent.appendChild) { // Check if parent is a valid node
+  if (parent && parent.appendChild) {
       parent.appendChild(elem);
   } else if (parent) {
       console.warn(`createSVGElement: Provided parent for tag '${tag}' is not a valid node.`);
   }
-
   return elem;
 }
 
@@ -173,7 +142,6 @@ export function createSVGElement(tag, attrs = {}, parent = null) {
  * @returns {string} A generated unique ID string.
  */
 export function generateUniqueId(prefix = 'svg-elem') {
-  // Combine prefix, timestamp, and a random integer for uniqueness
   return `${prefix}-${Date.now()}-${randomInt(1000, 9999)}`;
 }
 
@@ -185,14 +153,12 @@ export function generateUniqueId(prefix = 'svg-elem') {
 export function formatNumber(num) {
     if (typeof num !== 'number') {
         console.warn(`formatNumber expected a number, received: ${typeof num}`);
-        return String(num); // Return string representation
+        return String(num);
     }
-  // Use Intl.NumberFormat for locale-aware formatting (more robust)
   try {
       return new Intl.NumberFormat().format(num);
   } catch (e) {
       console.warn("Intl.NumberFormat failed, using basic regex fallback for formatNumber.", e);
-      // Basic regex fallback (less robust for different locales)
       return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
 }
@@ -204,9 +170,97 @@ export function formatNumber(num) {
  */
 export function getTimeSeedValue() {
   const now = new Date();
-  const secondsInDay = 86400; // 24 hours * 60 minutes * 60 seconds
-  // Calculate total seconds passed since midnight
+  const secondsInDay = 86400;
   const currentSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds() + now.getMilliseconds() / 1000;
-  // Return the fraction of the day completed
   return currentSeconds / secondsInDay;
+}
+
+
+// ========================================================
+// NEW Curve Smoothing Utility Functions
+// ========================================================
+
+/**
+ * Converts an array of points into an SVG path string ('d' attribute),
+ * optionally applying smoothing using Catmull-Rom to Bezier conversion.
+ * @param {Array<{x: number, y: number}>} points - Array of point objects.
+ * @param {string} smoothingType - 'straight', 'cubic_bezier', 'quadratic_bezier'.
+ * @param {object} options - Additional options (e.g., { splineTension: 0.5 }).
+ * @param {boolean} [closePath=false] - Whether to add 'Z' to close the path.
+ * @returns {string} The SVG path 'd' attribute string.
+ */
+export function pointsToPathString(points, smoothingType = 'straight', options = {}, closePath = false) {
+    if (!points || points.length < 2) {
+        return ''; // Need at least two points for a path
+    }
+
+    let d = `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
+
+    switch (smoothingType) {
+        case 'cubic_bezier':
+            d += pointsToCubicBezierString(points, options.splineTension);
+            break;
+        case 'quadratic_bezier':
+            // Placeholder: Implement quadratic Bezier logic if needed
+             console.warn("Quadratic Bezier smoothing not fully implemented yet, using straight lines.");
+             d += points.slice(1).map(p => `L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ');
+            break;
+        case 'straight':
+        default:
+            d += points.slice(1).map(p => `L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ');
+            break;
+    }
+
+    if (closePath) {
+        d += ' Z';
+    }
+
+    return d;
+}
+
+/**
+ * Converts an array of points to a Cubic Bezier path string using Catmull-Rom interpolation.
+ * Internal helper for pointsToPathString.
+ * @param {Array<{x: number, y: number}>} points - Array of point objects.
+ * @param {number} [tension=0.5] - Catmull-Rom tension (0=linear, 0.5=standard, 1=tighter).
+ * @returns {string} The path string segment starting from the second point (e.g., " C cp1x,cp1y cp2x,cp2y x1,y1 C ...").
+ */
+function pointsToCubicBezierString(points, tension = 0.5) {
+    if (points.length < 2) return '';
+
+    let pathSegment = '';
+    // Adjust tension: Catmull-Rom uses alpha, often tension = (1 - alpha) / 2.
+    // We'll use the tension value directly for simplicity here, scaling its effect.
+    const t = tension; // Keep it simple for now
+
+    // Add virtual start/end points for tangent calculation at endpoints if not closing path
+    // For simplicity, we'll just duplicate endpoints for now. Better methods exist.
+    const pts = [points[0], ...points, points[points.length - 1]];
+
+    for (let i = 1; i < pts.length - 2; i++) {
+        const p0 = pts[i - 1];
+        const p1 = pts[i];     // Start point of segment
+        const p2 = pts[i + 1]; // End point of segment
+        const p3 = pts[i + 2];
+
+        // Calculate tangents using Catmull-Rom formula (simplified tension application)
+        // Tangent at p1
+        const tx1 = (p2.x - p0.x) * t;
+        const ty1 = (p2.y - p0.y) * t;
+        // Tangent at p2
+        const tx2 = (p3.x - p1.x) * t;
+        const ty2 = (p3.y - p1.y) * t;
+
+        // Convert tangents to Bezier control points
+        // Control point 1 (near p1)
+        const cp1x = p1.x + tx1 / 3; // Adjust divisor for tension effect if needed
+        const cp1y = p1.y + ty1 / 3;
+        // Control point 2 (near p2)
+        const cp2x = p2.x - tx2 / 3;
+        const cp2y = p2.y - ty2 / 3;
+
+        // Append Cubic Bezier segment command
+        pathSegment += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+    }
+    return pathSegment;
 }

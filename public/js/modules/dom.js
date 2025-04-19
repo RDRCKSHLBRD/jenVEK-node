@@ -71,14 +71,15 @@ export function cacheDOMElements() {
     dom.animationType = document.getElementById('animation-type');
 
     // --- Math Controls (Top Sidebar - NEW) ---
-    dom.curveSmoothing = document.getElementById('curve-smoothing');
-    dom.splineTension = document.getElementById('spline-tension');
-    dom.lissajousA = document.getElementById('lissajous-a');
-    dom.lissajousB = document.getElementById('lissajous-b');
-    dom.lissajousDelta = document.getElementById('lissajous-delta');
-    dom.spiralType = document.getElementById('spiral-type');
-    dom.spiralA = document.getElementById('spiral-a');
-    dom.spiralB = document.getElementById('spiral-b');
+    // Use JS-friendly camelCase names for keys in the dom object
+    dom.curvesmoothing = document.getElementById('curve-smoothing'); // Note: ID has hyphen, key does not
+    dom.splinetension = document.getElementById('spline-tension');
+    dom.lissajousa = document.getElementById('lissajous-a');
+    dom.lissajousb = document.getElementById('lissajous-b');
+    dom.lissajousdelta = document.getElementById('lissajous-delta');
+    dom.spiraltype = document.getElementById('spiral-type');
+    dom.spirala = document.getElementById('spiral-a');
+    dom.spiralb = document.getElementById('spiral-b');
     // Add more math control IDs here as they are added to index.html
 
     // --- Header Buttons ---
@@ -88,13 +89,13 @@ export function cacheDOMElements() {
     dom.downloadJsonBtn = document.getElementById('download-json-btn');
     dom.toggleLeftBtn = document.getElementById('toggle-left');
     dom.toggleRightBtn = document.getElementById('toggle-right');
-    dom.toggleMathBtn = document.getElementById('toggle-math'); // Cache the new button
+    dom.toggleMathBtn = document.getElementById('toggle-math'); // Cache the math toggle button
 
     // --- Sidebars ---
     // Use getElementById now that we've added IDs in the HTML
     dom.leftSidebar = document.getElementById('left-sidebar');
     dom.rightSidebar = document.getElementById('right-sidebar');
-    dom.mathSidebar = document.getElementById('math-sidebar');   // Cache the new sidebar
+    dom.mathSidebar = document.getElementById('math-sidebar');   // Cache the math sidebar
 
     // --- Canvas Area Elements ---
     dom.cursorInfo = document.getElementById('cursor-info');
@@ -113,8 +114,9 @@ export function cacheDOMElements() {
         const display = input.parentElement?.querySelector('.value-display');
         if (display) {
             // Use input.id which should be unique
-            const displayKey = input.id + 'Display';
-            dom[displayKey] = display; // e.g., dom.lineSpacingDisplay, dom.splineTensionDisplay etc.
+            // Convert hyphenated ID to camelCase for the display key
+            const displayKey = input.id.replace(/-([a-z])/g, g => g[1].toUpperCase()) + 'Display';
+            dom[displayKey] = display; // e.g., dom.splineTensionDisplay, dom.lissajousADisplay etc.
             display.textContent = input.value;
             // Add listener to update display when range value changes
             input.addEventListener('input', () => {

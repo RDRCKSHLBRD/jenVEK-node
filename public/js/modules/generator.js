@@ -2,13 +2,13 @@
 
 // ----- MODULE IMPORTS -----
 import { state } from './state.js';
-import { dom } from './dom.js';
+import { dom } from './dom.js'; // Make sure dom is imported
 import { getColorPalette, getRandomFill } from './colorUtils.js';
-import { updateMathInfo, updateSVGStats } from './ui.js';
+import { updateMathInfo, updateSVGStats } from './ui.js'; // Ensure ui functions are imported
 import {
-    createSVGElement, secureRandom, getTimeSeedValue,
+    createSVGElement, secureRandom, getTimeSeedValue, pointsToPathString // Ensure pointsToPathString is imported
     // Import hashing function if using string seeds, or keep simple for now
-} from './utils.js';
+} from './utils.js'; // Ensure utils functions are imported
 
 // ----- PATTERN FUNCTION IMPORTS -----
 // Import all pattern generator functions from their respective files in the patterns directory
@@ -16,16 +16,16 @@ import { generateLinesPattern } from './patterns/lines.js';
 import { generateRandomPattern } from './patterns/random.js';
 import { generateRecursivePattern } from './patterns/recursive.js';
 import { generateGridPattern } from './patterns/grid.js';
-import { generateQuadtreePattern } from './patterns/QuadTree.js'; // Filename from tree
-import { generateFibonacciPattern } from './patterns/Fibonacci.js'; // Filename from tree
-import { generateMandelbrotPattern } from './patterns/Mandelbrot.js'; // Filename from tree
+import { generateQuadtreePattern } from './patterns/QuadTree.js';
+import { generateFibonacciPattern } from './patterns/Fibonacci.js';
+import { generateMandelbrotPattern } from './patterns/Mandelbrot.js';
 import { generatePrimePattern } from './patterns/prime.js';
-import { generateTrigPattern } from './patterns/trigWave.js'; // Filename from tree
-import { generateBezierPattern } from './patterns/Bezier.js'; // Filename from tree
-import { generateLissajousPattern } from './patterns/Lissajous.js'; // Filename from tree
-import { generatePadovanPattern } from './patterns/Padovan.js'; // Filename from tree
-import { generateRecamanPattern } from './patterns/Recaman.js'; // Filename from tree
-import { generateRoseCurvePattern } from './patterns/rose.js'; // Import the Rose Curve
+import { generateTrigPattern } from './patterns/trigWave.js';
+import { generateBezierPattern } from './patterns/Bezier.js';
+import { generateLissajousPattern } from './patterns/Lissajous.js';
+import { generatePadovanPattern } from './patterns/Padovan.js';
+import { generateRecamanPattern } from './patterns/Recaman.js';
+import { generateRoseCurvePattern } from './patterns/rose.js';
 
 
 // ----- CORE GENERATION LOGIC -----
@@ -36,6 +36,7 @@ import { generateRoseCurvePattern } from './patterns/rose.js'; // Import the Ros
  */
 function getOptions() {
     // Define required element IDs for validation
+    // Add the IDs of the new math controls
     const requiredDOMElements = [
         'patternType', 'layerCount', 'complexity', 'density', 'repetition',
         'maxRecursion', 'roseNParam', 'strokeWeight', 'scale', 'opacity',
@@ -43,27 +44,41 @@ function getOptions() {
         'lineWaveAmplitude','lineWaveFrequency','lineSpacingRatio', 'lineSpacingInvert',
         'viewportPreset', 'customWidth', 'customHeight', 'useCursor', 'useTime',
         'colorCategory', 'colorPalette', 'bgColor', 'strokeColor', 'fillType',
-        'animation', 'animationType'
+        'animation', 'animationType',
+        // New Math Controls (Ensure these IDs match index.html and dom.js cache keys)
+        'curve-smoothing', 'spline-tension', 'lissajous-a', 'lissajous-b',
+        'lissajous-delta', 'spiral-type', 'spiral-a', 'spiral-b'
     ];
-    // Check if all required DOM elements are cached
+
+    // Check if all required DOM elements are cached in the dom object
     for (const id of requiredDOMElements) {
-        // Check if the dom object itself or the specific element is missing
-        if (!dom || !dom[id]) {
-            console.error(`getOptions: Required DOM element #${id} not cached or found!`);
-            // Returning null indicates failure to retrieve options
-            return null;
+        // Construct the expected cache key (remove hyphens for JS property access)
+        const cacheKey = id.replace(/-/g, '');
+        // Check if the dom object itself exists AND if the specific key exists in the dom object
+        if (!dom || !dom[cacheKey]) {
+            // As a fallback, try getElementById directly, but log a warning if cache failed
+            if (!document.getElementById(id)) {
+                console.error(`getOptions: CRITICAL - DOM element #${id} not found in cache OR document! Cannot proceed.`);
+                return null; // Cannot proceed if element doesn't exist at all
+            } else {
+                console.warn(`getOptions: DOM element #${id} was not found in dom cache, using direct lookup (check dom.js).`);
+                // Optionally, you could try to cache it here, but it's better to fix dom.js
+                // dom[cacheKey] = document.getElementById(id);
+            }
         }
     }
 
     // Read values from cached DOM elements
     try {
-        state.currentOptions = {
+        // Use a temporary object to build options, then assign to state.currentOptions
+        const options = {
+            // Existing Generator Options
             patternType: dom.patternType.value,
             complexity: parseInt(dom.complexity.value, 10),
             density: parseInt(dom.density.value, 10),
             maxRecursion: parseInt(dom.maxRecursion.value, 10),
             strokeWeight: parseFloat(dom.strokeWeight.value),
-            opacity: parseFloat(dom.opacity.value),
+            opacity: parseFloat(dom.opacity.value), // Read primary opacity control
             scale: parseFloat(dom.scale.value),
             layerCount: parseInt(dom.layerCount.value, 10),
             repetition: parseInt(dom.repetition.value, 10),
@@ -74,45 +89,47 @@ function getOptions() {
             useTime: dom.useTime.checked,
             animation: dom.animation.checked,
             animationType: dom.animationType.value,
-            viewportWidth: state.viewportWidth,
-            viewportHeight: state.viewportHeight,
-            capturedX: state.capturedX,
-            capturedY: state.capturedY,
-            capturedV: state.capturedV,
+            viewportWidth: state.viewportWidth, // Get from state
+            viewportHeight: state.viewportHeight, // Get from state
+            capturedX: state.capturedX, // Get from state
+            capturedY: state.capturedY, // Get from state
+            capturedV: state.capturedV, // Get from state
             roseNParam: parseFloat(dom.roseNParam.value),
-            curveSteps: parseInt(dom.curveSteps.value, 10) || 0, // Default to 0 if parsing fails
-            offsetX: parseFloat(dom.offsetX.value) || 0, // Default to 0
-            offsetY: parseFloat(dom.offsetY.value) || 0, // Default to 0
-            globalAngle: parseInt(dom.globalAngle.value, 10) || 0, // Default to 0
-            seedOverride: dom.seedOverride.value.trim(), // Get seed as string
+            curveSteps: parseInt(dom.curveSteps.value, 10) || 0,
+            offsetX: parseFloat(dom.offsetX.value) || 0,
+            offsetY: parseFloat(dom.offsetY.value) || 0,
+            globalAngle: parseInt(dom.globalAngle.value, 10) || 0,
+            seedOverride: dom.seedOverride.value.trim(),
             lineSpacing: parseInt(dom.lineSpacing.value,10) || 20,
             lineWaveAmplitude: parseFloat(dom.lineWaveAmplitude.value) || 0,
             lineWaveFrequency: parseFloat(dom.lineWaveFrequency.value) || 1,
-            lineSpacingRatio: parseFloat(dom.lineSpacingRatio.value) || 1.0, // Default ratio 1
-            lineSpacingInvert: dom.lineSpacingInvert.checked, // Boolean
+            lineSpacingRatio: parseFloat(dom.lineSpacingRatio.value) || 1.0,
+            lineSpacingInvert: dom.lineSpacingInvert.checked,
+
+            // *** NEW: Read Math Control Options ***
+            // Access cached elements using the corrected cache keys (no hyphens)
+            curveSmoothing: dom.curvesmoothing.value, // e.g., 'straight', 'cubic_bezier'
+            splineTension: parseFloat(dom.splinetension.value) || 0.5, // Default tension
+            lissajousA: parseInt(dom.lissajousa.value, 10) || 3, // Default A freq
+            lissajousB: parseInt(dom.lissajousb.value, 10) || 2, // Default B freq
+            // Convert selected fraction (string) to radians (number)
+            lissajousDelta: parseFloat(dom.lissajousdelta.value) * Math.PI || 0,
+            spiralType: dom.spiraltype.value, // e.g., 'archimedean'
+            spiralA: parseFloat(dom.spirala.value) || 0, // Default spiral param A
+            spiralB: parseFloat(dom.spiralb.value) || 0.1, // Default spiral param B
         };
-        return state.currentOptions;
+
+        // Assign the constructed options object to the global state
+        state.currentOptions = options;
+        console.log("Current Options Read:", state.currentOptions); // Log the options read
+        return state.currentOptions; // Return the options object
+
     } catch (error) {
         console.error("Error reading options from DOM:", error);
+        // Clear current options in state on error? Or keep previous? Decide policy.
+        // state.currentOptions = {};
         return null; // Return null on error
     }
-}
-
-/**
- * Simple hash function to convert a string seed into a number.
- * Used when a non-numeric seed override is provided.
- * @param {string} str - The input seed string.
- * @returns {number} A numeric hash value.
- */
-function simpleStringHash(str) {
-    let hash = 0;
-    if (!str || str.length === 0) return hash;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash |= 0; // Convert to 32bit integer
-    }
-    return Math.abs(hash); // Ensure positive seed
 }
 
 
@@ -132,111 +149,84 @@ export function generateSVG() {
     }
 
     // Get options, handling potential errors during retrieval
+    // getOptions now updates state.currentOptions directly and returns it
     const options = getOptions();
     if (!options) {
          alert("Error retrieving generation options. Please check console.");
          return;
     }
-    // Get the current color palette
+    // Get the current color palette (ensure this runs *after* options are set if needed)
     const palette = getColorPalette();
 
     // --- Clear SVG ---
     dom.defs.innerHTML = ''; // Clear definitions (gradients, patterns)
-    // Remove all direct children of the SVG except the <defs> element
     while (dom.svg.lastChild && dom.svg.lastChild !== dom.defs) {
          dom.svg.removeChild(dom.svg.lastChild);
     }
 
     // --- Set Background ---
-    // Add a background rect if a non-white color is selected
     if (options.bgColor && options.bgColor.toUpperCase() !== '#FFFFFF') {
         const bgRect = createSVGElement('rect', { x: 0, y: 0, width: '100%', height: '100%', fill: options.bgColor });
-        // Insert background right after <defs>
         dom.svg.insertBefore(bgRect, dom.defs.nextSibling);
     }
 
     // --- Seeding Logic ---
-    const originalRandom = Math.random; // Backup original Math.random
-    let seed; // Variable to hold the final numeric seed
-
-    // Use seed override if provided by the user
+    const originalRandom = Math.random;
+    let seed;
     if (options.seedOverride) {
         const numSeed = parseFloat(options.seedOverride);
-        if (!isNaN(numSeed)) { // Check if it's a valid number
-            seed = numSeed;
-            console.log(`Using numeric seed override: ${seed}`);
-        } else { // Otherwise, hash the string
-            seed = simpleStringHash(options.seedOverride);
-            console.log(`Using hashed string seed override ('${options.seedOverride}' -> ${seed})`);
-        }
+        // Use simpleStringHash only if parseFloat results in NaN
+        seed = !isNaN(numSeed) ? numSeed : simpleStringHash(options.seedOverride);
+        console.log(`Using seed override: ${options.seedOverride} -> ${seed}`);
     } else {
-        // If no override, calculate seed based on time/cursor options
-        seed = Date.now(); // Start with current time
-        if (options.useTime) {
-            seed += getTimeSeedValue() * 1e9; // Add time component
+        seed = Date.now();
+        if (options.useTime) { seed += getTimeSeedValue() * 1e9; }
+        if (options.useCursor) {
+             if (state.mouseX !== null) { seed += Math.sin(state.mouseX*0.01)*1e5; }
+             if (state.mouseY !== null) { seed += Math.cos(state.mouseY*0.01)*1e5; }
+             if (state.capturedX !== null) { seed += Math.sin(state.capturedX*0.1)*1e4; }
+             if (state.capturedY !== null) { seed += Math.cos(state.capturedY*0.1)*1e4; }
+             if (state.capturedV?.x !== null) { seed += Math.sin(state.capturedV.x*0.1)*1e3; }
+             if (state.capturedV?.y !== null) { seed += Math.cos(state.capturedV.y*0.1)*1e3; }
         }
-        if (options.useCursor) { // Add cursor/captured components
-            if (state.mouseX !== null && state.mouseY !== null) { seed += Math.sin(state.mouseX*0.01)*1e5 + Math.cos(state.mouseY*0.01)*1e5; }
-            if (state.capturedX !== null) { seed += Math.sin(state.capturedX*0.1)*1e4; }
-            if (state.capturedY !== null) { seed += Math.cos(state.capturedY*0.1)*1e4; }
-            if (state.capturedV?.x !== null) { seed += Math.sin(state.capturedV.x*0.1)*1e3; }
-            if (state.capturedV?.y !== null) { seed += Math.cos(state.capturedV.y*0.1)*1e3; }
-        }
-        console.log(`Using time/cursor seed (approx): ${seed}`);
+        console.log(`Using time/cursor seed (approx): ${seed.toFixed(0)}`);
     }
 
-    // Initialize the seeded pseudo-random number generator (PRNG) - simple LCG
-    let currentSeed = Math.floor(Math.abs(seed)) % 2147483647; // Ensure positive 32-bit integer range
-    if (currentSeed === 0) currentSeed = 1; // Seed cannot be 0 for this LCG
+    let currentSeed = Math.floor(Math.abs(seed)) % 2147483647;
+    if (currentSeed === 0) currentSeed = 1;
     const seededRandom = () => {
-        currentSeed = (currentSeed * 16807) % 2147483647; // Generate next number
-        return (currentSeed - 1) / 2147483646; // Normalize to [0, 1)
+        currentSeed = (currentSeed * 16807) % 2147483647;
+        return (currentSeed - 1) / 2147483646;
     };
-
-    // Override Math.random with our seeded generator for this generation cycle
     Math.random = seededRandom;
     console.log(`Using PRNG with initial seed value: ${currentSeed}`);
 
 
     // --- Generation Loop (Layers) ---
     let totalElements = 0;
-    let combinedMathInfo = {}; // Store details about each layer
+    let combinedMathInfo = {};
 
     try {
-        // Loop for the specified number of layers
         for (let layer = 0; layer < options.layerCount; layer++) {
-            state.currentLayer = layer; // Track current layer in global state
-
-            // Calculate CUMULATIVE offset and constant angle for this layer
+            state.currentLayer = layer;
             const currentOffsetX = layer * options.offsetX;
             const currentOffsetY = layer * options.offsetY;
-            const currentAngle = options.globalAngle; // Apply same rotation to each layer group
-
-            // Define the transform: rotate around viewport center, then translate
+            const currentAngle = options.globalAngle;
             const transform = `rotate(${currentAngle}, ${options.viewportWidth / 2}, ${options.viewportHeight / 2}) translate(${currentOffsetX}, ${currentOffsetY})`;
+            let layerGroup = createSVGElement('g', { id: `layer-${layer}`, transform: transform }, dom.svg);
 
-            // Create the layer group with ID and transform
-            let layerGroup = createSVGElement('g', {
-                id: `layer-${layer}`,
-                transform: transform
-            }, dom.svg); // Append directly to the main SVG
-
-             // Create options specific to this layer, modifying some based on layer index
-             const layerOptions = { ...options };
-             if (layer > 0) { // Apply variations only for layers after the first
+             const layerOptions = { ...options }; // Pass the full options object including new math params
+             if (layer > 0) {
                  layerOptions.complexity = Math.max(1, options.complexity - layer * 1.5);
                  layerOptions.density = Math.max(1, options.density - layer * 15);
                  layerOptions.strokeWeight = Math.max(0.1, options.strokeWeight * (1 - layer * 0.25));
                  layerOptions.opacity = Math.max(0.1, options.opacity * (1 - layer * 0.2));
                  layerOptions.scale = options.scale * (1 - layer * 0.15);
-                 // Note: offsetX, offsetY, globalAngle from the main options are used for the group transform,
-                 // layerOptions passed to the pattern function still contain the original values unless modified here.
             }
 
-            let result = {}; // Store result from the pattern function
-
-            // Call the appropriate IMPORTED pattern generation function via switch
-            switch (options.patternType) {
+            let result = {};
+            // Call the appropriate pattern function, passing the full layerOptions
+            switch (layerOptions.patternType) {
                  case 'lines': result = generateLinesPattern(layerGroup, layerOptions, palette); break;
                  case 'random': result = generateRandomPattern(layerGroup, layerOptions, palette); break;
                  case 'recursive': result = generateRecursivePattern(layerGroup, layerOptions, palette); break;
@@ -252,36 +242,31 @@ export function generateSVG() {
                  case 'recaman': result = generateRecamanPattern(layerGroup, layerOptions, palette); break;
                  case 'rose': result = generateRoseCurvePattern(layerGroup, layerOptions, palette); break;
                  default:
-                     console.warn("Unknown pattern type selected:", options.patternType, "Falling back to random.");
+                     console.warn("Unknown pattern type selected:", layerOptions.patternType);
                      result = generateRandomPattern(layerGroup, layerOptions, palette);
             }
 
-            // Aggregate results, ensuring result is a valid object
             totalElements += (result && typeof result === 'object' && result.elementCount) ? result.elementCount : 0;
             combinedMathInfo[`Layer_${layer}`] = result || { error: 'Pattern function returned invalid result' };
         }
 
         // --- Finalize and Update UI ---
-        // Store final math info and SVG data in state
         state.mathInfo = {
             generator: options.patternType, layers: options.layerCount,
             viewport: `${options.viewportWidth}x${options.viewportHeight}`,
             totalElements: totalElements, details: combinedMathInfo,
-            // Optionally include seed info
             seedUsed: options.seedOverride || `Time/Cursor based (~${seed.toFixed(0)})`
         };
-        updateMathInfo(state.mathInfo); // Update display panel
-        updateSVGStats(totalElements); // Update stats display
-        state.svgData = dom.svg.outerHTML; // Store SVG for download
-        state.generationCount++; // Increment counter
+        updateMathInfo(state.mathInfo); // Call the imported function
+        updateSVGStats(totalElements); // Call the imported function
+        state.svgData = dom.svg.outerHTML;
+        state.generationCount++;
 
-        // Start animation if enabled
         if (options.animation) {
             startAnimation();
         }
 
     } catch (error) {
-         // --- Error Handling ---
          console.error('Error during SVG generation main loop:', error);
          const errorText = createSVGElement('text', { x: 10, y: 50, fill: 'red', 'font-family': 'sans-serif', 'font-size': '16px' });
          errorText.textContent = `Error: ${error.message}. Check console.`;
@@ -290,15 +275,31 @@ export function generateSVG() {
          updateSVGStats(0);
      }
     finally {
-        // --- Cleanup ---
-        Math.random = originalRandom; // ALWAYS restore original Math.random
+        Math.random = originalRandom; // Restore original Math.random
         console.log("Restored original Math.random.");
     }
 }
 
 
 // ----- Animation Functions -----
-// (These remain here as they operate on the generated SVG elements)
+// (Keep existing animation functions as they were)
+/**
+ * Simple hash function to convert a string seed into a number.
+ * Used when a non-numeric seed override is provided.
+ * @param {string} str - The input seed string.
+ * @returns {number} A numeric hash value.
+ */
+function simpleStringHash(str) {
+    let hash = 0;
+    if (!str || str.length === 0) return hash;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return Math.abs(hash); // Ensure positive seed
+}
+
 
 /**
  * Starts the animation loop based on the current options.
