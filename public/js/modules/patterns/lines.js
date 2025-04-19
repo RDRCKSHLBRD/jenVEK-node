@@ -2,7 +2,7 @@
 
 // ----- MODULE IMPORTS -----
 // Import necessary utilities
-import { createSVGElement, randomChoice } from '../utils.js';
+import { createSVGElement, randomChoice, pointsToPathString } from '../utils.js'; // Added pointsToPathString
 // Import color utilities for fill handling
 import { getRandomFill } from '../colorUtils.js';
 // Import random if needed for phase variation (optional)
@@ -10,30 +10,28 @@ import { getRandomFill } from '../colorUtils.js';
 
 /**
  * Generates a pattern of parallel wavy lines with variable spacing.
- * Base orientation/spacing set by lineSpacing, then rotated by globalAngle.
- * Spacing between lines increases/decreases based on lineSpacingRatio.
- * Direction of spacing change controlled by lineSpacingInvert.
- * Wave shape controlled by lineWaveAmplitude and lineWaveFrequency.
- * Fill determined by fillType option.
+ * Can now apply smoothing between calculated points.
  * @param {SVGElement} parent - The parent SVG group element (<g>).
- * @param {object} options - Generation options object.
+ * @param {object} options - Generation options object, including curveSmoothing, splineTension.
  * @param {string[]} palette - The array of hex color strings for the current palette.
  * @returns {object} An object containing generation results (e.g., elementCount).
  */
 export function generateLinesPattern(parent, options, palette) {
-    console.log("Generating Wavy Lines pattern with variable spacing...");
-    // Destructure needed options
+    // Destructure needed options, including smoothing options
     const {
         viewportWidth: width, viewportHeight: height, lineSpacing, globalAngle,
         strokeColor, strokeWeight, opacity, fillType,
         lineWaveAmplitude, lineWaveFrequency,
-        lineSpacingRatio, lineSpacingInvert // New spacing controls
+        lineSpacingRatio, lineSpacingInvert,
+        curveSmoothing, splineTension // Get smoothing options
     } = options;
     let elementCount = 0;
 
+    console.log(`Generating Wavy Lines pattern (Smoothing: ${curveSmoothing})...`);
+
     // Ensure valid base inputs
-    const baseSpacing = Math.max(1, lineSpacing); // Initial spacing
-    const ratio = Math.max(0.1, lineSpacingRatio); // Prevent ratio of 0 or less
+    const baseSpacing = Math.max(1, lineSpacing);
+    const ratio = Math.max(0.1, lineSpacingRatio);
     const amplitude = lineWaveAmplitude || 0;
     const frequency = lineWaveFrequency || 1;
 
@@ -42,38 +40,31 @@ export function generateLinesPattern(parent, options, palette) {
     // Calculate draw area slightly larger than viewport diagonal
     const diagonal = Math.sqrt(width * width + height * height);
     const drawWidth = diagonal * 1.2;
-    // Estimate number of lines - This is trickier with variable spacing.
-    // We might draw slightly too many or too few, but it's a starting point.
-    // A better approach might be to loop until currentX exceeds the draw area.
-    const estimatedAvgSpacing = baseSpacing * Math.pow(ratio, 5); // Rough estimate
+    const estimatedAvgSpacing = baseSpacing * Math.pow(ratio, 5);
     const numLines = Math.max(5, Math.ceil(drawWidth / Math.max(1, estimatedAvgSpacing)));
 
     // Create group and apply rotation
     const lineGroup = createSVGElement('g', {
         transform: `rotate(${globalAngle} ${width / 2} ${height / 2})`,
-        stroke: strokeColor,
-        'stroke-width': strokeWeight,
-        opacity: opacity
-        // Fill is set per path
+        // Stroke/opacity applied per path now for potentially different colors/styles
     }, parent);
 
     // Define vertical extent for lines
     const lineLength = diagonal * 1.2;
     const startY = height / 2 - lineLength / 2;
     const endY = height / 2 + lineLength / 2;
-    const pathSteps = 50;
+    const pathSteps = 50; // Number of points calculated along the wave
 
-    // Calculate starting X position (left edge of expanded draw area)
+    // Calculate starting X position
     const startDrawX = width / 2 - drawWidth / 2;
-    let currentX = startDrawX; // Initialize cumulative X position
+    let currentX = startDrawX;
 
     // Loop to create each wavy line/path
     for (let i = 0; i < numLines; i++) {
-        // The base X for the current line is the accumulated position
         const baseX = currentX;
-
+        // Store points as objects {x, y}
         const pathPoints = [];
-        const phaseShift = i * 0.5;
+        const phaseShift = i * 0.5; // Simple phase shift based on line index
 
         // Calculate points along the wavy path
         for (let j = 0; j <= pathSteps; j++) {
@@ -82,45 +73,47 @@ export function generateLinesPattern(parent, options, palette) {
             const xOffset = amplitude * sineValue;
             const pointX = baseX + xOffset;
             const pointY = currentY;
-            pathPoints.push(`${pointX.toFixed(2)},${pointY.toFixed(2)}`);
+            // Store point object
+            pathPoints.push({ x: pointX, y: pointY });
         }
 
         // Create the path element if points were generated
         if (pathPoints.length > 1) {
-            const d = `M ${pathPoints[0]} L ${pathPoints.slice(1).join(' L ')} Z`; // Close path
+            // *** USE THE NEW UTILITY FUNCTION TO GET THE PATH STRING ***
+            // Pass true for closePath because original code used 'Z'
+            const d = pointsToPathString(pathPoints, curveSmoothing, { splineTension }, true);
+
             const fillValue = (fillType === 'none') ? 'none' : getRandomFill(palette, options);
+            const pathStrokeColor = randomChoice(palette) || strokeColor; // Vary stroke color
 
             createSVGElement('path', {
-                d: d,
-                stroke: randomChoice(palette) || strokeColor,
-                fill: fillValue
+                d: d, // Use the generated path string (straight or smoothed)
+                stroke: pathStrokeColor,
+                'stroke-width': strokeWeight,
+                fill: fillValue,
+                opacity: opacity
             }, lineGroup);
             elementCount++;
         }
 
-        // *** Calculate spacing for the NEXT line ***
-        // Determine the index for ratio calculation based on invert flag
-        // If inverted, lines further right (higher i) use lower power of ratio (closer spacing if ratio > 1)
+        // Calculate spacing for the NEXT line
         const ratioIndex = lineSpacingInvert ? (numLines - 1 - i) : i;
-        // Calculate the spacing using geometric progression: base * ratio^index
         const currentGap = baseSpacing * Math.pow(ratio, ratioIndex);
-        // Ensure a minimum gap size
         const actualGap = Math.max(1, currentGap);
-
-        // Update currentX for the position of the *next* line
         currentX += actualGap;
 
-        // Optional: Stop if we've drawn past the right edge of the expanded draw area
+        // Optional stop condition
          if (currentX > startDrawX + drawWidth * 1.1) {
              console.log("Stopping line generation early (exceeded draw width).");
              break;
          }
     }
 
-    console.log(`Generated ${elementCount} wavy lines with variable spacing.`);
+    console.log(`Generated ${elementCount} lines with variable spacing.`);
     return {
         elementCount,
         pattern: 'Wavy Lines (Variable Spacing)',
+        smoothing: curveSmoothing, // Include smoothing type in results
         baseSpacing: baseSpacing,
         ratio: ratio,
         invert: lineSpacingInvert,
