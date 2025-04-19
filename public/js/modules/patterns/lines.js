@@ -4,7 +4,7 @@
 // Import necessary utilities
 import { createSVGElement, randomChoice, pointsToPathString } from '../utils.js';
 // Import color utilities for fill handling
-import { getRandomFill } from '../colorUtils.js';
+// import { getRandomFill } from '../colorUtils.js'; // No longer needed for fill here
 // Import random if needed for phase variation (optional)
 // import { random } from '../utils.js';
 
@@ -21,8 +21,8 @@ export function generateLinesPattern(parent, options, palette) {
     // Destructure needed options, including smoothing, captured coords, and the new arc amount
     const {
         viewportWidth: width, viewportHeight: height, lineSpacing, globalAngle,
-        strokeColor, strokeWeight, opacity, fillType,
-        lineWaveAmplitude, lineWaveFrequency, lineArcAmount, // Added lineArcAmount
+        strokeColor, strokeWeight, opacity, // Removed fillType as lines shouldn't be filled
+        lineWaveAmplitude, lineWaveFrequency, lineArcAmount,
         lineSpacingRatio, lineSpacingInvert,
         curveSmoothing, splineTension, // Smoothing options
         capturedX, capturedY // Captured coordinate options
@@ -30,7 +30,7 @@ export function generateLinesPattern(parent, options, palette) {
     } = options;
     let elementCount = 0;
 
-    console.log(`Generating Wavy Lines pattern (Smoothing: ${curveSmoothing}, Captured Pt: ${capturedX !== null ? 'Yes' : 'No'}, Arc: ${lineArcAmount})...`); // Updated log
+    console.log(`Generating Wavy Lines pattern (Smoothing: ${curveSmoothing}, Captured Pt: ${capturedX !== null ? 'Yes' : 'No'}, Arc: ${lineArcAmount})...`);
 
     // Ensure valid base inputs
     const baseSpacing = Math.max(1, lineSpacing);
@@ -39,7 +39,7 @@ export function generateLinesPattern(parent, options, palette) {
     const frequency = lineWaveFrequency || 1;
     const arcAmount = lineArcAmount || 0; // Get arc amount, default to 0
 
-    console.log(` - Base Spacing: ${baseSpacing}, Ratio: ${ratio}, Invert: ${lineSpacingInvert}, Amplitude: ${amplitude}, Frequency: ${frequency}, Arc: ${arcAmount}, Angle: ${globalAngle}`); // Updated log
+    console.log(` - Base Spacing: ${baseSpacing}, Ratio: ${ratio}, Invert: ${lineSpacingInvert}, Amplitude: ${amplitude}, Frequency: ${frequency}, Arc: ${arcAmount}, Angle: ${globalAngle}`);
     if (capturedX !== null) {
         console.log(` - Captured Point: (${capturedX.toFixed(0)}, ${capturedY.toFixed(0)})`);
     }
@@ -47,7 +47,7 @@ export function generateLinesPattern(parent, options, palette) {
     // Calculate draw area slightly larger than viewport diagonal
     const diagonal = Math.sqrt(width * width + height * height);
     const drawWidth = diagonal * 1.2;
-    const estimatedAvgSpacing = baseSpacing * Math.pow(ratio, 5);
+    const estimatedAvgSpacing = baseSpacing * Math.pow(ratio, 5); // Estimate average spacing for rough line count
     const numLines = Math.max(5, Math.ceil(drawWidth / Math.max(1, estimatedAvgSpacing)));
 
     // Create group and apply rotation
@@ -110,7 +110,8 @@ export function generateLinesPattern(parent, options, palette) {
             let arcOffsetX = 0;
             if (arcAmount !== 0) {
                  // Parabolic function: 4 * amount * x * (1 - x) -> 0 at ends, peak=amount at middle
-                 arcOffsetX = 4 * arcAmount * normalizedProgress * (1 - normalizedProgress);
+                 // *** TEST: Negate the arc amount to see if it reverses the visual curve ***
+                 arcOffsetX = -4 * arcAmount * normalizedProgress * (1 - normalizedProgress);
             }
 
             // 4. Combine all offsets and store final point
@@ -123,14 +124,13 @@ export function generateLinesPattern(parent, options, palette) {
             // Use the utility function to get the path string (smoothed or straight)
             const d = pointsToPathString(pathPoints, curveSmoothing, { splineTension }, false); // Don't close path for lines
 
-            const fillValue = (fillType === 'none') ? 'none' : getRandomFill(palette, options);
             const pathStrokeColor = randomChoice(palette) || strokeColor;
 
             createSVGElement('path', {
                 d: d,
                 stroke: pathStrokeColor,
                 'stroke-width': strokeWeight,
-                fill: fillValue, // Usually 'none' for lines, but respect option
+                fill: 'none', // *** Ensure fill is none ***
                 opacity: opacity
             }, lineGroup);
             elementCount++;
