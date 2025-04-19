@@ -86,6 +86,8 @@ function getOptions() {
             globalAngle: parseInt(dom.globalAngle.value, 10) || 0, // Default to 0
             seedOverride: dom.seedOverride.value.trim(), // Get seed as string
             lineSpacing: parseInt(dom.lineSpacing.value,10) || 20,
+            lineWaveAmplitude: parseFloat(dom.lineWaveAmplitude.value) || 0,
+            lineWaveFrequency: parseFloat(dom.lineWaveFrequency.value) || 1,
         };
         return state.currentOptions;
     } catch (error) {
